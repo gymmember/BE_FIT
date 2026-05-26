@@ -1,0 +1,171 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User body profile details containing metrics and personal goals",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The Firebase Authentication unique user ID"
+        },
+        "weight": {
+          "type": "number",
+          "description": "Body weight in kilograms"
+        },
+        "height": {
+          "type": "number",
+          "description": "Height in centimeters"
+        },
+        "bmi": {
+          "type": "number",
+          "description": "Calculated Body Mass Index"
+        },
+        "category": {
+          "type": "string",
+          "description": "Body type classification based on BMI (Underweight, Normal Weight, Overweight, Obese)"
+        },
+        "goal": {
+          "type": "string",
+          "description": "The user's primary fitness target (Fat Loss, Clean Bulk, Strength Maintenance)"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "UTC timestamp when the body profile was last saved"
+        }
+      },
+      "required": ["userId", "weight", "height", "bmi", "category", "goal", "updatedAt"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "Weekly class scheduling reservations logged by users",
+      "type": "object",
+      "properties": {
+        "bookingId": {
+          "type": "string",
+          "description": "The unique document ID for this reservation"
+        },
+        "userId": {
+          "type": "string",
+          "description": "The unique user ID who reserved this class"
+        },
+        "userName": {
+          "type": "string",
+          "description": "Full name of the registrant"
+        },
+        "userPhone": {
+          "type": "string",
+          "description": "Phone number of the registrant"
+        },
+        "classId": {
+          "type": "string",
+          "description": "Identifier of the target group training class"
+        },
+        "classTitle": {
+          "type": "string",
+          "description": "Title of the reserved class"
+        },
+        "trainerName": {
+          "type": "string",
+          "description": "The supervising trainer name"
+        },
+        "scheduleTime": {
+          "type": "string",
+          "description": "The reserved time slot"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "UTC timestamp of the booking creation"
+        }
+      },
+      "required": ["bookingId", "userId", "userName", "userPhone", "classId", "classTitle", "trainerName", "scheduleTime", "createdAt"]
+    },
+    "MembershipPass": {
+      "title": "MembershipPass",
+      "description": "Generated membership passes and vouchers for check-in validation",
+      "type": "object",
+      "properties": {
+        "passId": {
+          "type": "string",
+          "description": "Unique serial identifier of this pass"
+        },
+        "userId": {
+          "type": "string",
+          "description": "The unique client owner user ID"
+        },
+        "clientName": {
+          "type": "string",
+          "description": "Full legal name on the pass"
+        },
+        "planId": {
+          "type": "string",
+          "description": "The selected plan identifier (intro-basic, shredded-quarter, champion-year)"
+        },
+        "planName": {
+          "type": "string",
+          "description": "Display name of the tier tier"
+        },
+        "payablePrice": {
+          "type": "string",
+          "description": "The calculated cost amount"
+        },
+        "sessionFrequency": {
+          "type": "number",
+          "description": "Indicated target workouts per week"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp of this pass"
+        }
+      },
+      "required": ["passId", "userId", "clientName", "planId", "planName", "payablePrice", "sessionFrequency", "createdAt"]
+    },
+    "ChatMessageLog": {
+      "title": "ChatMessageLog",
+      "description": "Dynamic log records storing user-trainer conversations securely",
+      "type": "object",
+      "properties": {
+        "messageId": {
+          "type": "string",
+          "description": "The unique message log identifier"
+        },
+        "sender": {
+          "type": "string",
+          "enum": ["user", "bot"],
+          "description": "The party who issued this message"
+        },
+        "text": {
+          "type": "string",
+          "description": "Text body contents of the chat message"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when this log message was sent"
+        }
+      },
+      "required": ["messageId", "sender", "text", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/user_profiles/{userId}": {
+      "schema": "UserProfile",
+      "description": "Individual member physical indicators and health logs"
+    },
+    "/bookings/{bookingId}": {
+      "schema": "Booking",
+      "description": "Global active gym class reservations"
+    },
+    "/passes/{passId}": {
+      "schema": "MembershipPass",
+      "description": "Active registration and tier tier vouchers"
+    },
+    "/user_profiles/{userId}/chats/{messageId}": {
+      "schema": "ChatMessageLog",
+      "description": "Secure personalized thread history log records for the client"
+    }
+  }
+}

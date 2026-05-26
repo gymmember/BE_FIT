@@ -1,0 +1,6 @@
+{
+  "name": "Brown Abs - The Gym",
+  "description": "Premium fitness facility in Jhargram specializing in absolute fitness, bodybuilding, fat loss, weight training, and personalized digital coaching.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
