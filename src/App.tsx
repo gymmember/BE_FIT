@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { GYM_DETAILS } from "./data";
 
-const LOGO_IMAGE_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQpCrxosSUmuNTr0SXgmA4HA9up2lzj8ztkw&s";
+const LOGO_IMAGE_URL = "/logo.jpg";
 
 export default function App() {
   const { user, loading, userProfile, signInWithEmail } = useFirebase();
@@ -66,9 +66,10 @@ export default function App() {
       {/* Global Background Image */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <img
-          src="https://lookaside.instagram.com/seo/google_widget/crawler/?media_id=3623284158694717042"
+          src="https://lh3.googleusercontent.com/p/AF1QipNJK52BXbNEolEpOkIu_kcSUJdXEkjxV2XTkQQB=s680-w680-h510-rw"
           alt="Be Fit Gym Background"
           className="w-full h-full object-cover opacity-45 mix-blend-overlay"
+          referrerPolicy="no-referrer"
         />
         <div className="absolute inset-0 bg-zinc-950/80"></div>
       </div>

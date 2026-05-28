@@ -19,20 +19,36 @@ export default function GymHeader({ logoUrl, onOpenAuth }: GymHeaderProps) {
           className="flex items-center gap-3 cursor-pointer select-none group focus:outline-none"
           id="gym-logo"
         >
-          <div className="relative flex items-center justify-center w-11 h-11 bg-gradient-to-br from-amber-600 to-amber-400 text-zinc-950 rounded-xl font-black font-sans text-lg tracking-tighter shadow-md shadow-amber-500/10 group-hover:shadow-amber-500/20 transition-all border border-amber-300/30">
-            BE
-            <div className="absolute -bottom-1 -right-1 bg-zinc-950 text-amber-500 p-0.5 rounded-full border border-zinc-800">
-              <Dumbbell size={9} strokeWidth={2.8} />
-            </div>
-          </div>
-          <div>
-            <h1 className="text-base md:text-xl font-sans font-bold tracking-wider text-white uppercase group-hover:text-amber-400 transition-colors">
-              BE FIT
-            </h1>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-amber-500/80 font-mono">
-              THE GYM • JHARGRAM
-            </p>
-          </div>
+          {logoUrl ? (
+            <>
+              <img src={logoUrl} alt="Be Fit Logo" className="h-16 w-auto object-contain rounded-full shadow-md shadow-amber-500/10 group-hover:shadow-amber-500/20 transition-all border border-amber-500/20" referrerPolicy="no-referrer" />
+              <div>
+                <h1 className="text-base md:text-xl font-sans font-bold tracking-wider text-white uppercase group-hover:text-amber-400 transition-colors">
+                  BE FIT
+                </h1>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-amber-500/80 font-mono">
+                  THE GYM
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="relative flex items-center justify-center w-11 h-11 bg-gradient-to-br from-amber-600 to-amber-400 text-zinc-950 rounded-xl font-black font-sans text-lg tracking-tighter shadow-md shadow-amber-500/10 group-hover:shadow-amber-500/20 transition-all border border-amber-300/30">
+                BE
+                <div className="absolute -bottom-1 -right-1 bg-zinc-950 text-amber-500 p-0.5 rounded-full border border-zinc-800">
+                  <Dumbbell size={9} strokeWidth={2.8} />
+                </div>
+              </div>
+              <div>
+                <h1 className="text-base md:text-xl font-sans font-bold tracking-wider text-white uppercase group-hover:text-amber-400 transition-colors">
+                  BE FIT
+                </h1>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-amber-500/80 font-mono">
+                  THE GYM • JHARGRAM
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Navigation Links */}

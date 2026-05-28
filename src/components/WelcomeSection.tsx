@@ -36,8 +36,13 @@ export function WelcomeSection() {
         
         <div className="w-full lg:w-1/2 flex justify-center">
           <div className="w-full aspect-[4/3] bg-zinc-900/60 border border-zinc-800 rounded-3xl flex items-center justify-center backdrop-blur-sm shadow-2xl relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <Dumbbell className="text-amber-500 w-24 h-24 transform group-hover:scale-110 transition-transform duration-500 drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]" />
+            <img 
+              src="https://lh3.googleusercontent.com/p/AF1QipNJK52BXbNEolEpOkIu_kcSUJdXEkjxV2XTkQQB=s680-w680-h510-rw" 
+              alt="Be Fit Gym Interior" 
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent pointer-events-none"></div>
           </div>
         </div>
       </div>
