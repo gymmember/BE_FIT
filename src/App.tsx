@@ -30,8 +30,7 @@ import {
   UserCheck
 } from "lucide-react";
 import { GYM_DETAILS } from "./data";
-
-const LOGO_IMAGE_URL = "/logo.jpg";
+import { LOGO_IMAGE_URL } from "./logo-b64";
 
 export default function App() {
   const { user, loading, userProfile, signInWithEmail } = useFirebase();
