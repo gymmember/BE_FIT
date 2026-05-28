@@ -3,6 +3,8 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import multer from "multer";
+import { put } from "@vercel/blob";
 
 dotenv.config();
 
@@ -10,6 +12,8 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+const upload = multer({ storage: multer.memoryStorage() });
+
 
 // Lazy-initialized Gemini client
 let aiClient: any = null;
@@ -29,6 +33,26 @@ function getAIClient() {
   }
   return aiClient;
 }
+
+// File Upload Router Endpoint using Vercel Blob
+app.post("/api/upload", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file provided" });
+    }
+    
+    // Connect to vercel storage
+    const { url } = await put(`articles/${req.file.originalname}`, req.file.buffer, {
+      access: 'public',
+      token: process.env.BLOB_READ_WRITE_TOKEN
+    });
+
+    return res.json({ url });
+  } catch (error: any) {
+    console.error("Vercel Blob upload failed:", error);
+    return res.status(500).json({ error: "Upload failed", details: error.message });
+  }
+});
 
 // AI Personal Trainer Router Endpoint
 app.post("/api/trainer/chat", async (req, res) => {

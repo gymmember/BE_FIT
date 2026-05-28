@@ -1,7 +1,9 @@
 import React from 'react';
 import { Dumbbell } from 'lucide-react';
+import gymInteriorImg from '../assets/images/regenerated_image_1779979489231.png';
 
 export function WelcomeSection() {
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-16 sm:py-24 relative z-10" id="welcome-section">
       <div className="flex flex-col lg:flex-row items-center gap-12">
@@ -37,7 +39,7 @@ export function WelcomeSection() {
         <div className="w-full lg:w-1/2 flex justify-center">
           <div className="w-full aspect-[4/3] bg-zinc-900/60 border border-zinc-800 rounded-3xl flex items-center justify-center backdrop-blur-sm shadow-2xl relative overflow-hidden group">
             <img 
-              src="https://lh3.googleusercontent.com/p/AF1QipNJK52BXbNEolEpOkIu_kcSUJdXEkjxV2XTkQQB=s680-w680-h510-rw" 
+              src={gymInteriorImg} 
               alt="Be Fit Gym Interior" 
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               referrerPolicy="no-referrer"
