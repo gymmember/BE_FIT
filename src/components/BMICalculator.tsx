@@ -177,7 +177,7 @@ export default function BMICalculator({ onBmiUpdate, setCurrentTab }: BMICalcula
         </h2>
         <p className="text-zinc-400 text-sm max-w-xl mx-auto leading-relaxed">
           Input your general body measurements to calculate your BMI, daily energy expenditure, 
-          and receive personalized recommendations from Brown Abs coaches.
+          and receive personalized recommendations from Be Fit coaches.
         </p>
       </div>
 
@@ -401,7 +401,7 @@ export default function BMICalculator({ onBmiUpdate, setCurrentTab }: BMICalcula
                   Recommended Routine
                 </span>
                 <h4 className="text-lg font-bold font-sans text-white mt-1.5">
-                  {goal === "Fat Loss" ? "Brown Core Blast" : "Iron Beast Hypertrophy"}
+                  {goal === "Fat Loss" ? "Be Fit Core Blast" : "Iron Beast Hypertrophy"}
                 </h4>
                 <p className="text-xs text-zinc-300 mt-1 line-clamp-2">
                   {goal === "Fat Loss" 

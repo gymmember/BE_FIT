@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
-      return request.auth != null && request.auth.uid == '0YvEuJTQlUTq60Bxehxg5z4F1gC3';
+      return request.auth != null && (request.auth.uid == '0YvEuJTQlUTq60Bxehxg5z4F1gC3' || (request.auth.token != null && 'email' in request.auth.token && request.auth.token.email == 'gymadmin@gmail.com'));
     }
 
     match /test/connection {
@@ -11,17 +11,15 @@ service cloud.firestore {
     }
 
     match /user_profiles/{userId} {
-      allow read, write: if request.auth != null && (isAdmin() || request.auth.uid == userId);
+      allow read, write: if request.auth != null;
       
       match /chats/{messageId} {
-        allow read, write: if request.auth != null && (isAdmin() || request.auth.uid == userId);
+        allow read, write: if request.auth != null;
       }
     }
 
     match /bookings/{bookingId} {
-      allow read: if request.auth != null && (isAdmin() || resource.data.userId == request.auth.uid);
-      allow create: if request.auth != null && (isAdmin() || request.resource.data.userId == request.auth.uid);
-      allow update, delete: if request.auth != null && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow read, write: if request.auth != null;
     }
 
     match /plans/{planId} {
@@ -30,9 +28,7 @@ service cloud.firestore {
     }
 
     match /passes/{passId} {
-      allow read: if request.auth != null && (isAdmin() || resource.data.userId == request.auth.uid);
-      allow create: if request.auth != null && (isAdmin() || request.resource.data.userId == request.auth.uid);
-      allow update, delete: if request.auth != null && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow read, write: if request.auth != null;
     }
   }
 }

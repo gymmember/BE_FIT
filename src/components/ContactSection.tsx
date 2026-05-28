@@ -28,8 +28,8 @@ export function ContactSection() {
               </div>
               <div>
                 <h4 className="text-white font-bold mb-1">Our Location</h4>
-                <a href="#" className="text-blue-500 hover:text-blue-400 text-sm underline-offset-4 hover:underline">
-                  Jhargram, West Bengal - 721507
+                <a href="https://maps.google.com/?q=Be+Fit+Gym,+Noble+Bud+School,+Bachurdoba,+Jhargram,+West+Bengal+721507" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400 text-sm underline-offset-4 hover:underline">
+                  1st FLOOR, NEAR HOUSING COMPLEX, NOBLE BUD SCHOOL, Bachurdoba, Jhargram, West Bengal 721507
                 </a>
               </div>
             </div>
@@ -41,8 +41,8 @@ export function ContactSection() {
               <div>
                 <h4 className="text-white font-bold mb-1">Phone Number</h4>
                 <div className="text-sm text-zinc-300 space-y-1">
-                  <div>Call: <a href="tel:+910000000000" className="text-blue-500 hover:text-blue-400">+91 00000 00000</a></div>
-                  <div>WhatsApp: <a href="https://wa.me/910000000000" className="text-blue-500 hover:text-blue-400">+91 00000 00000</a></div>
+                  <div>Call: <a href="tel:+917908669556" className="text-blue-500 hover:text-blue-400">+91 79086 69556</a></div>
+                  <div>WhatsApp: <a href="https://wa.me/917908669556" className="text-blue-500 hover:text-blue-400">+91 79086 69556</a></div>
                 </div>
               </div>
             </div>
@@ -53,8 +53,8 @@ export function ContactSection() {
               </div>
               <div>
                 <h4 className="text-white font-bold mb-1">Email Address</h4>
-                <a href="mailto:info@brownabs.in" className="text-zinc-300 hover:text-white text-sm transition-colors">
-                  info@brownabs.in
+                <a href="mailto:info@befitgym.in" className="text-zinc-300 hover:text-white text-sm transition-colors">
+                  info@befitgym.in
                 </a>
               </div>
             </div>

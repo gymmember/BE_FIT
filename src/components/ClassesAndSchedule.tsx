@@ -281,7 +281,7 @@ export default function ClassesAndSchedule() {
                     <input
                       type="tel"
                       required
-                      placeholder="e.g. +91 70011-83325"
+                      placeholder="e.g. +91 79086-69556"
                       value={userPhone}
                       onChange={(e) => setUserPhone(e.target.value)}
                       className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-amber-500/40"

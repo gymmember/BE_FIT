@@ -11,10 +11,10 @@ export default function GymFooter() {
         <div className="lg:col-span-4 space-y-4">
           <div className="space-y-1">
             <h4 className="text-xl font-bold tracking-wider text-white uppercase font-sans">
-              BROWN ABS <span className="text-amber-500 font-normal">THE GYM</span>
+              BE FIT <span className="text-amber-500 font-normal">THE GYM</span>
             </h4>
-            <p className="text-[10px] tracking-[0.25em] text-zinc-650 font-mono font-bold uppercase">
-              RAGHUNATHPUR • JHARGRAM
+            <p className="text-[10px] tracking-[0.25em] text-zinc-600 font-mono font-bold uppercase">
+              BACHURDOBA • JHARGRAM
             </p>
           </div>
 
@@ -24,7 +24,7 @@ export default function GymFooter() {
 
           <div className="flex items-center gap-2 text-xs text-zinc-500 font-mono">
             <ShieldCheck size={14} className="text-amber-500 shrink-0" />
-            <span>Official Licensed Club • Reg ID: BA-JHG-856A</span>
+            <span>Official Licensed Club • Reg ID: BF-JHG-856A</span>
           </div>
         </div>
 
@@ -68,7 +68,7 @@ export default function GymFooter() {
            <h5 className="text-zinc-200 text-xs tracking-widest font-mono font-bold uppercase">LOCATION MAP</h5>
            <div className="w-full h-48 lg:h-32 rounded-lg overflow-hidden border border-zinc-800 relative group">
              <iframe 
-                src="https://maps.google.com/maps?q=Brown%20Abs%20The%20Gym%20Jhargram&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                src="https://maps.google.com/maps?q=Be%20Fit%20Gym%20Noble%20Bud%20School%20Bachurdoba%20Jhargram&t=&z=15&ie=UTF8&iwloc=&output=embed"
                 width="100%" 
                 height="100%" 
                 style={{ border: 0 }} 
@@ -84,10 +84,10 @@ export default function GymFooter() {
 
       <div className="max-w-7xl mx-auto mt-12 pt-6 border-t border-zinc-900 flex flex-col sm:flex-row justify-between items-center gap-4 text-[11px] font-mono text-zinc-600">
         <div>
-          © {new Date().getFullYear()} Brown Abs - The Gym. All power reserved.
+          © {new Date().getFullYear()} Be Fit - The Gym. All privileges reserved.
         </div>
         <div className="flex gap-4">
-          <a href="https://maps.google.com/?q=Nunnungeria,+Raghunathpur,+Jhargram,+West+Bengal+721507" target="_blank" rel="noopener noreferrer" className="hover:text-amber-500 flex items-center gap-1">
+          <a href="https://maps.google.com/?q=Be+Fit+Gym,+Noble+Bud+School,+Bachurdoba,+Jhargram,+West+Bengal+721507" target="_blank" rel="noopener noreferrer" className="hover:text-amber-500 flex items-center gap-1">
             Google Maps Route <ExternalLink size={10} />
           </a>
         </div>

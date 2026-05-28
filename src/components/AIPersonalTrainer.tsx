@@ -22,9 +22,9 @@ export default function AIPersonalTrainer({ userBmiData }: AIPersonalTrainerProp
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const welcomeMessageText = `### **Welcome to the Brown Abs Training Portal!** 🏋️‍♂️🔥
+  const welcomeMessageText = `### **Welcome to the Be Fit Training Portal!** 🏋️‍♂️🔥
 
-I am Coach Bikram, the digital assistant trainer here at **Brown Abs Gym, Jhargram**. 
+I am Coach Bikram, the digital assistant trainer here at **Be Fit Gym, Jhargram**. 
 
 ${
   userBmiData
@@ -196,7 +196,7 @@ It seems I got distracted correcting someone's squat posture! Please try again.
             </div>
 
             <p className="text-xs text-zinc-400 font-sans leading-relaxed">
-              Interact live with the executive digital trainers of <span className="text-white font-semibold">Brown Abs - The Gym, Jhargram</span>. 
+              Interact live with the executive digital trainers of <span className="text-white font-semibold">Be Fit - The Gym, Jhargram</span>. 
               Our AI interface is aware of your BMI values, and leverages Google's advanced modeling algorithms.
             </p>
 

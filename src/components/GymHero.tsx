@@ -20,7 +20,7 @@ export default function GymHero({ heroImageUrl }: GymHeroProps) {
       <div className="absolute inset-0 z-0">
         <img
           src={heroImageUrl}
-          alt="Brown Abs Gym Prime Setup"
+          alt="Be Fit Gym Prime Setup"
           className="w-full h-full object-cover filter brightness-[0.25] contrast-[1.1]"
           referrerPolicy="no-referrer"
         />
@@ -47,7 +47,7 @@ export default function GymHero({ heroImageUrl }: GymHeroProps) {
           </h2>
 
           <p className="text-zinc-300 text-base sm:text-lg max-w-2xl mx-auto lg:mx-0 font-sans font-normal leading-relaxed">
-            Welcome to <span className="text-amber-400 font-semibold">Brown Abs Gym</span>—where power meets premium aesthetics. 
+            Welcome to <span className="text-amber-400 font-semibold">Be Fit Gym</span>—where power meets premium aesthetics. 
             Equipped with world-class resistance machinery, dedicated sports trainers, and interactive core conditioning programs designed to chisel your absolute potential.
           </p>
 

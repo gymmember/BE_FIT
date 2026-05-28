@@ -1,6 +1,6 @@
 {
-  "name": "Brown Abs - The Gym",
-  "description": "Premium fitness facility in Jhargram specializing in absolute fitness, bodybuilding, fat loss, weight training, and personalized digital coaching.",
+  "name": "Be Fit - The Gym",
+  "description": "Premium fitness facility in Jhargram specializing in strength conditioning, bodybuilding, fat loss, weight training, and personalized digital coaching under Be Fit Gym coaches.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

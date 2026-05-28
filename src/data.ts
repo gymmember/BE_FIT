@@ -1,10 +1,10 @@
 import { GymClass, MembershipPlan, Trainer } from "./types";
 
 export const GYM_DETAILS = {
-  name: "Brown Abs - The Gym",
+  name: "Be Fit - The Gym",
   tagline: "Carve Your Core. Dominate Your Strength.",
-  location: "Nunnungeria, Raghunathpur, Jhargram, West Bengal 721507",
-  phone: "+91 70011 83325",
+  location: "1st FLOOR, NEAR HOUSING COMPLEX, NOBLE BUD SCHOOL, Bachurdoba, Jhargram, West Bengal 721507",
+  phone: "+91 79086 69556",
   timings: {
     weekdays: "5:30 AM - 10:00 PM",
     saturday: "6:00 AM - 9:00 PM",
@@ -46,7 +46,7 @@ export const TRAINERS: Trainer[] = [
 export const CLASSES: GymClass[] = [
   {
     id: "brown-core-blast",
-    title: "Brown Core Blast",
+    title: "Be Fit Core Blast",
     category: "core",
     duration: "45 mins",
     intensity: "Intermediate",
@@ -127,7 +127,7 @@ export const PRICING_PLANS: MembershipPlan[] = [
     popular: true,
     features: [
       "Full locker & premium amenities",
-      "Priority registration for 'Brown Core Blast' classes",
+      "Priority registration for 'Be Fit Core Blast' classes",
       "1x Custom Diet template from Coach Sneha",
       "Bi-weekly body fat caliper tracking",
       "AI Personal Trainer Chat Portal integration",
@@ -147,7 +147,7 @@ export const PRICING_PLANS: MembershipPlan[] = [
       "All-time facility access VIP Pass",
       "12x Advanced 1-on-1 coaching checkups",
       "Full customizable training & nutrition routines",
-      "Complimentary 'Brown Abs' official gym t-shirt",
+      "Complimentary 'BE FIT' official gym t-shirt",
       "Priority VIP booking for specialized masterclasses"
     ],
     color: "from-amber-900/40 via-zinc-950 to-zinc-900 border-yellow-600 hover:border-yellow-400",

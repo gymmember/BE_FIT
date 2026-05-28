@@ -7,13 +7,13 @@ export function WelcomeSection() {
       <div className="flex flex-col lg:flex-row items-center gap-12">
         <div className="w-full lg:w-1/2 space-y-6">
           <h2 className="text-4xl sm:text-5xl font-black uppercase tracking-tight text-white drop-shadow-lg">
-            Welcome to <span className="text-amber-500">Brown Abs</span>
+            Welcome to <span className="text-amber-500">Be Fit</span>
           </h2>
           <p className="text-zinc-300 text-lg font-medium drop-shadow-md">
             Jhargram's most trusted destination for real transformation!
           </p>
           <p className="text-zinc-400 text-sm leading-relaxed drop-shadow-md">
-            Since our launch, Brown Abs has become the go-to place for those serious about fitness. Whether you're just starting out or a seasoned lifter, our certified trainers, cutting-edge equipment, and motivating environment ensure you get the results you're looking for. 
+            Since our launch, Be Fit has become the go-to place for those serious about fitness. Whether you're just starting out or a seasoned lifter, our certified trainers, cutting-edge equipment, and motivating environment ensure you get the results you're looking for. 
             <br/><br/>
             Here, fitness isn't a routine — it's a lifestyle fueled by passion.
           </p>

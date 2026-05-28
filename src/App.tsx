@@ -44,7 +44,7 @@ export default function App() {
 
   // Set page titles appropriately
   useEffect(() => {
-    document.title = "Brown Abs - The Gym | Jhargram's Core Strength Arena";
+    document.title = "Be Fit - The Gym | Jhargram's Prime Strength Arena";
   }, []);
 
   // 1-Click admin login helper
@@ -66,9 +66,9 @@ export default function App() {
       {/* Global Background Image */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <img
-          src="https://lh3.googleusercontent.com/gps-cs-s/APNQkAFSAeqcB2V9ogCuDqfrM_CX58AUDMK1XNX7LeNS6-dUUyXdN4832N30iBExTJgxHr6PFDu_gAzXrgAFmIAmQOIG9YY-fcaK-eGW5sQK3HPIcdk9-L99p6zsv2fWO5UatA0DrGxTVQ=s680-w680-h510-rw"
-          alt="Gym global background"
-          className="w-full h-full object-cover opacity-40 mix-blend-overlay"
+          src="https://lookaside.instagram.com/seo/google_widget/crawler/?media_id=3623284158694717042"
+          alt="Be Fit Gym Background"
+          className="w-full h-full object-cover opacity-45 mix-blend-overlay"
         />
         <div className="absolute inset-0 bg-zinc-950/80"></div>
       </div>

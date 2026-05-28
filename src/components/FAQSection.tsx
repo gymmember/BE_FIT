@@ -3,7 +3,7 @@ import { ChevronDown } from "lucide-react";
 
 const FAQS = [
   {
-    question: "Where is Brown Abs located?",
+    question: "Where is Be Fit located?",
     answer: "We are located down the street in the heart of Jhargram, providing easy access from all parts of the city. Call us for precise directions if you need assistance."
   },
   {
