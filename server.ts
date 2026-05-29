@@ -103,10 +103,10 @@ ${bmiContext}`;
 
     return res.json({ text: response.text });
   } catch (error: any) {
-    console.error("Gemini API server-side call failed:", error);
-    return res.status(500).json({
-      error: "Our trainer AI is currently lifting heavy weights! Grab some water and try again soon.",
-      details: error.message
+    // Graceful fallback dialogue system on API failure (e.g., 503 high demand)
+    const fallbackResponse = generateLocalResponse(latestMessage, userBmiData);
+    return res.json({
+      text: fallbackResponse + "\n\n*(Note: Our primary AI is currently experiencing high demand. Responding with local offline coaching rules!)*"
     });
   }
 });

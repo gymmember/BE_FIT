@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Activity, Sparkles, Scale, RefreshCw, Check, ArrowRight, ShieldAlert } from "lucide-react";
-import { CLASSES } from "../data";
 import { useFirebase } from "../context/FirebaseContext";
 
 interface BMICalculatorProps {
@@ -391,32 +390,6 @@ export default function BMICalculator({ onBmiUpdate, setCurrentTab }: BMICalcula
                 * To achieve <span className="text-amber-400 font-semibold">{goal}</span>, consume approximately <span className="text-white font-semibold">{getTargetCalories()} kcal</span> with a balanced macro ratio of 40% protein, 35% clean carbohydrates, and 25% healthy fats.
               </p>
             </div>
-          </div>
-
-          {/* Recommended Class Block */}
-          <div className="bg-amber-950/10 border border-amber-500/20 rounded-2xl p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="text-[9px] uppercase tracking-widest bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-mono">
-                  Recommended Routine
-                </span>
-                <h4 className="text-lg font-bold font-sans text-white mt-1.5">
-                  {goal === "Fat Loss" ? "Be Fit Core Blast" : "Iron Beast Hypertrophy"}
-                </h4>
-                <p className="text-xs text-zinc-300 mt-1 line-clamp-2">
-                  {goal === "Fat Loss" 
-                    ? CLASSES.find(c => c.id === "brown-core-blast")?.description 
-                    : CLASSES.find(c => c.id === "iron-beast-bodybuilding")?.description}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setCurrentTab("classes")}
-              className="mt-4 text-xs font-sans font-bold text-amber-500 hover:text-amber-400 inline-flex items-center gap-1 group"
-            >
-              See Class Schedule
-              <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
-            </button>
           </div>
         </div>
       </div>

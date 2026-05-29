@@ -104,53 +104,31 @@ export const CLASSES: GymClass[] = [
 
 export const PRICING_PLANS: MembershipPlan[] = [
   {
-    id: "intro-basic",
-    name: "Classic Bronze Pack",
-    price: "₹1,500",
+    id: "student-plan",
+    name: "Student",
+    price: "₹700",
+    period: "Monthly",
+    popular: true,
+    features: [
+      "AC",
+      "Access to cardio and weights",
+      "All access"
+    ],
+    color: "from-amber-950 via-zinc-900 to-amber-950 border-amber-500/70 shadow-[0_0_15px_rgba(245,158,11,0.15)]",
+    cta: "Join as Student",
+  },
+  {
+    id: "others-plan",
+    name: "Others",
+    price: "₹900",
     period: "Monthly",
     popular: false,
     features: [
-      "Access to standard high-end gym equipment",
-      "Full locker and hot shower access",
-      "Initial 1-on-1 coach orientation program",
-      "Free high-speed wi-fi in facilities",
-      "General trainer supervision during floor hours"
+      "AC",
+      "Access to cardio and weights",
+      "All access"
     ],
     color: "from-zinc-900 via-zinc-800 to-zinc-900 border-zinc-700 hover:border-amber-700/60",
-    cta: "Start Your Routine",
-  },
-  {
-    id: "shredded-quarter",
-    name: "3-Month Shred Pack",
-    price: "₹3,800",
-    period: "Quarterly",
-    popular: true,
-    features: [
-      "Full locker & premium amenities",
-      "Priority registration for 'Be Fit Core Blast' classes",
-      "1x Custom Diet template from Coach Sneha",
-      "Bi-weekly body fat caliper tracking",
-      "AI Personal Trainer Chat Portal integration",
-      "Flexible workout slot selection"
-    ],
-    color: "from-amber-950 via-zinc-900 to-amber-950 border-amber-500/70 shadow-[0_0_15px_rgba(245,158,11,0.15)]",
-    cta: "Join The Core Circle",
-  },
-  {
-    id: "champion-year",
-    name: "1-Year Elite Champion",
-    price: "₹12,000",
-    period: "Yearly",
-    popular: false,
-    features: [
-      "Super economical - equivalent to ₹1,000/month",
-      "All-time facility access VIP Pass",
-      "12x Advanced 1-on-1 coaching checkups",
-      "Full customizable training & nutrition routines",
-      "Complimentary 'BE FIT' official gym t-shirt",
-      "Priority VIP booking for specialized masterclasses"
-    ],
-    color: "from-amber-900/40 via-zinc-950 to-zinc-900 border-yellow-600 hover:border-yellow-400",
-    cta: "Achieve Greatness",
+    cta: "Join Now",
   }
 ];

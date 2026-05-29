@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Zap, Bot, User, CornerDownLeft, Info, HelpCircle, Dumbbell } from "lucide-react";
+import { Send, X, MoreHorizontal, Copy, ThumbsUp, ThumbsDown, ArrowUp } from "lucide-react";
 import { ChatMessage } from "../types";
 import { useFirebase } from "../context/FirebaseContext";
 
 interface AIPersonalTrainerProps {
+  onClose?: () => void;
   userBmiData: {
     weight: number;
     height: number;
@@ -13,7 +14,7 @@ interface AIPersonalTrainerProps {
   } | null;
 }
 
-export default function AIPersonalTrainer({ userBmiData }: AIPersonalTrainerProps) {
+export default function AIPersonalTrainer({ onClose, userBmiData }: AIPersonalTrainerProps) {
   const { user, chatMessages, sendChatMessage } = useFirebase();
   const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
   const [inputVal, setInputVal] = useState("");
@@ -22,19 +23,9 @@ export default function AIPersonalTrainer({ userBmiData }: AIPersonalTrainerProp
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const welcomeMessageText = `### **Welcome to the Be Fit Training Portal!** 🏋️‍♂️🔥
-
-I am Coach Bikram, the digital assistant trainer here at **Be Fit Gym, Jhargram**. 
-
-${
-  userBmiData
-    ? `I see your updated body stats. You are currently **${userBmiData.category}** (BMI: **${userBmiData.bmi}**), aiming for **${userBmiData.goal}**! 
-
-I have fully adapted my programming weights, reps, and advice according to your stats. Ask me anything about your custom workouts or meal setups!`
-    : "I can build full workout splits, protein limits, and abs-sculpting plans. To help me give you specific muscle targets, input your stats inside the **Health Hub** tab first!"
-}
-
-Try one of the training topics below or write your gym question!`;
+  const welcomeMessageText = userBmiData 
+    ? `Welcome back to the Digital Coach Portal!\n\nI see your stats: you're currently in the ${userBmiData.category} category (BMI ${userBmiData.bmi}) with a focus on ${userBmiData.goal}. Let's tune your workout and nutrition today to get closer to those goals. What's on your mind?` 
+    : `Welcome to the Digital Coach Portal!\n\nI can help you build custom workout routines, recommend nutrition plans, and guide you towards your fitness goals.\n\nUpdate your body stats in the Health Hub for a personalized plan, or just ask me any fitness question you have right now!`;
 
   const welcomeMessage: ChatMessage = {
     id: "welcome-coach",
@@ -45,29 +36,28 @@ Try one of the training topics below or write your gym question!`;
 
   // Initialize and synchronise local fallback state
   useEffect(() => {
-    setLocalMessages([welcomeMessage]);
-  }, [userBmiData]);
+    if (!user || chatMessages.length === 0) {
+      setLocalMessages([welcomeMessage]);
+    }
+  }, [userBmiData, user]);
 
-  // Unified messages display logic
-  const messages = user
-    ? (chatMessages.length === 0
-        ? [welcomeMessage]
-        : chatMessages.map((msg) => ({
-            id: msg.messageId,
-            sender: msg.sender,
-            text: msg.text,
-            timestamp: msg.createdAt && typeof msg.createdAt.toDate === "function"
-              ? msg.createdAt.toDate()
-              : new Date()
-          })))
-    : localMessages;
+  useEffect(() => {
+    if (user && chatMessages.length > 0) {
+      setLocalMessages((prev) => {
+        const firestoreMsgs = chatMessages.map((msg) => ({
+          id: msg.messageId,
+          sender: msg.sender,
+          text: msg.text,
+          timestamp: msg.createdAt && typeof msg.createdAt.toDate === "function"
+            ? msg.createdAt.toDate()
+            : new Date()
+        }));
+        return firestoreMsgs.length >= prev.length || (prev.length === 1 && prev[0].id === 'welcome-coach') ? firestoreMsgs : prev;
+      });
+    }
+  }, [chatMessages, user]);
 
-  const quickPrompts = [
-    { label: "🔥 Build Shred Plan", query: "Can you generate a detailed 4-day workout plan based on my current stats and goal?" },
-    { label: "🥑 High-Protein Diet", query: "Give me a high-protein nutrition plan. What sources should I eat or avoid?" },
-    { label: "🎖️ Washboard Abs Drill", query: "What are the absolute finest exercises to carve my lower abs and core?" },
-    { label: "💪 Heavy Bench Correction", query: "How do I increase my bench press power and fix shoulder flare posture?" }
-  ];
+  const messages = localMessages;
 
   const handleSendMessage = async (textToSend: string) => {
     if (!textToSend.trim() || loading) return;
@@ -87,15 +77,13 @@ Try one of the training topics below or write your gym question!`;
       } catch (err) {
         console.error("Failed to save user chat to Firestore:", err);
       }
-    } else {
-      setLocalMessages((prev) => [...prev, userMsg]);
     }
+    setLocalMessages((prev) => [...prev, userMsg]);
 
     setInputVal("");
     setLoading(true);
 
     try {
-      // Build proper full thread history for Gemini to read
       const threadHistory = user
         ? chatMessages.map((msg) => ({
             sender: msg.sender,
@@ -128,26 +116,19 @@ Try one of the training topics below or write your gym question!`;
         } catch (err) {
           console.error("Failed to save bot chat to Firestore:", err);
         }
-      } else {
-        setLocalMessages((prev) => [
-          ...prev,
-          {
-            id: `bot-${Date.now()}`,
-            sender: "bot",
-            text: botResponseText,
-            timestamp: new Date()
-          }
-        ]);
       }
-    } catch (err: any) {
-      console.error(err);
-      setErrorText(err.message || "Something went wrong during dynamic trainer conversation.");
       
-      const errorResponseText = `⚠️ **Trainer Communication Pause**
-          
-It seems I got distracted correcting someone's squat posture! Please try again. 
-
-*(If you are testing this application, ensure that you have run 'getAIClient' correctly or set the GEMINI_API_KEY inside your Settings/Secrets dashboard!)*`;
+      setLocalMessages((prev) => [
+        ...prev,
+        {
+          id: `bot-${Date.now()}`,
+          sender: "bot",
+          text: botResponseText,
+          timestamp: new Date()
+        }
+      ]);
+    } catch (err: any) {
+      const errorResponseText = `⚠️ Trainer Communication Pause. Please try again later.`;
 
       if (user) {
         try {
@@ -155,24 +136,19 @@ It seems I got distracted correcting someone's squat posture! Please try again.
         } catch (dbErr) {
           console.error("Failed to save error bot msg to firestore:", dbErr);
         }
-      } else {
-        setLocalMessages((prev) => [
-          ...prev,
-          {
-            id: `bot-err-${Date.now()}`,
-            sender: "bot",
-            text: errorResponseText,
-            timestamp: new Date()
-          }
-        ]);
       }
+      setLocalMessages((prev) => [
+        ...prev,
+        {
+          id: `bot-err-${Date.now()}`,
+          sender: "bot",
+          text: errorResponseText,
+          timestamp: new Date()
+        }
+      ]);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handlePromptClick = (query: string) => {
-    handleSendMessage(query);
   };
 
   useEffect(() => {
@@ -180,196 +156,101 @@ It seems I got distracted correcting someone's squat posture! Please try again.
   }, [messages, loading]);
 
   return (
-    <section className="bg-zinc-950 py-12 px-4 sm:px-6 max-w-7xl mx-auto text-white">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch min-h-[680px]">
+    <div className="flex flex-col flex-1 w-full max-w-3xl mx-auto h-full bg-black overflow-hidden font-sans">
+      
+      {/* Header */}
+      <div className="flex justify-between items-center px-4 py-4 shrink-0 text-white border-b border-white/5">
+        <button onClick={onClose} className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors flex items-center justify-center">
+          <X size={20} />
+        </button>
+        <h1 className="text-[15px] font-semibold tracking-wide">Digital Coach</h1>
+        <button className="p-2 -mr-2 text-white hover:bg-white/10 rounded-full transition-colors flex items-center justify-center">
+          <MoreHorizontal size={20} />
+        </button>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 scroll-smooth custom-scrollbar">
+        {/* Date string */}
+        {messages.length > 0 && (
+          <div className="text-center text-[11px] font-medium text-white/50 mb-8 mt-2">
+            {messages[0].timestamp.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+          </div>
+        )}
         
-        {/* Left Side Info Panel */}
-        <div className="lg:col-span-4 bg-zinc-900 border border-zinc-800 p-6 rounded-2xl flex flex-col justify-between space-y-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="bg-amber-500/10 p-2 border border-amber-500/20 rounded-xl">
-                <Dumbbell className="text-amber-500 w-5 h-5 animate-spin" />
-              </div>
-              <h3 className="font-sans font-extrabold text-lg uppercase tracking-wide">
-                Digital Coach Portal
-              </h3>
-            </div>
+        <div className="space-y-6 flex flex-col">
+          {messages.map((msg, idx) => {
+            const isUser = msg.sender === "user";
 
-            <p className="text-xs text-zinc-400 font-sans leading-relaxed">
-              Interact live with the executive digital trainers of <span className="text-white font-semibold">Be Fit - The Gym, Jhargram</span>. 
-              Our AI interface is aware of your BMI values, and leverages Google's advanced modeling algorithms.
-            </p>
-
-            {/* Locked-in BMI details if available */}
-            <div className="space-y-3 pt-2">
-              <h4 className="text-[10px] text-zinc-500 uppercase tracking-widest font-mono">
-                Locked-in Client Target Stats
-              </h4>
-
-              {userBmiData ? (
-                <div className="bg-zinc-950 p-4 border border-zinc-800 rounded-xl space-y-2">
-                  <div className="flex justify-between text-xs font-sans">
-                    <span className="text-zinc-500">BMI / Class:</span>
-                    <span className="text-amber-400 font-semibold">{userBmiData.bmi} ({userBmiData.category})</span>
-                  </div>
-                  <div className="flex justify-between text-xs font-sans">
-                    <span className="text-zinc-500">Weight:</span>
-                    <span className="text-white font-semibold">{userBmiData.weight} kg</span>
-                  </div>
-                  <div className="flex justify-between text-xs font-sans">
-                    <span className="text-zinc-500">Training Goal:</span>
-                    <span className="text-emerald-400 font-semibold">{userBmiData.goal}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-zinc-950 p-4 border border-zinc-800 rounded-xl text-center">
-                  <p className="text-xs text-zinc-500 font-mono">No custom stats configured.</p>
-                  <p className="text-[10px] text-amber-500/85 mt-1 font-sans">
-                    Go to health hub to lock-in height and target calculations!
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Quick tips */}
-          <div className="p-4 rounded-xl bg-amber-950/15 border border-amber-500/20 text-xs text-zinc-400 space-y-1.5 font-sans">
-            <span className="font-bold text-white flex items-center gap-1">
-              <Info size={13} className="text-amber-500" />
-              Developer Notice
-            </span>
-            <p className="text-[11px] leading-normal text-zinc-400">
-              This trainer AI uses the Gemini API. Add your <strong className="text-amber-400">GEMINI_API_KEY</strong> inside the <strong>Settings &gt; Secrets</strong> dashboard. It has an integrated high-fidelity helper logic for absolute stability if keys are vacant.
-            </p>
-          </div>
-        </div>
-
-        {/* Right Chat Interface Box */}
-        <div className="lg:col-span-8 bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col overflow-hidden">
-          
-          {/* Box Header */}
-          <div className="bg-zinc-950 p-4 px-6 border-b border-zinc-800 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="relative flex h-3.5 w-3.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
-              </span>
-              <div>
-                <h4 className="text-sm font-bold text-zinc-100 font-sans tracking-wide">COACH BIKRAM & SNEHA</h4>
-                <p className="text-[10px] text-zinc-500 font-mono">ONLINE CORE ADVISORS</p>
-              </div>
-            </div>
-            
-            <span className="text-xs bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full text-zinc-400 font-mono">
-              gemini-3.5-flash
-            </span>
-          </div>
-
-          {/* Messages Scroll Area */}
-          <div className="flex-1 p-6 overflow-y-auto space-y-4 max-h-[460px] min-h-[420px] bg-zinc-900/60 custom-scrollbar">
-            {messages.map((msg) => (
+            return (
               <div
                 key={msg.id}
-                className={`flex gap-3.5 items-start max-w-[85%] ${
-                  msg.sender === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
-                }`}
+                className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}
               >
-                {/* Avatar Icon */}
-                <div
-                  className={`h-8 w-8 rounded-lg shrink-0 flex items-center justify-center border text-xs ${
-                    msg.sender === "user"
-                      ? "bg-amber-500 border-amber-600 text-zinc-950"
-                      : "bg-zinc-950 border-zinc-800 text-amber-500"
-                  }`}
-                >
-                  {msg.sender === "user" ? <User size={14} /> : <Bot size={14} />}
-                </div>
-
-                {/* Bubble */}
-                <div className="space-y-1">
-                  <div
-                    className={`rounded-2xl p-4 text-xs font-sans leading-relaxed text-zinc-200 markdown-body ${
-                      msg.sender === "user"
-                        ? "bg-zinc-800 rounded-tr-none text-zinc-100"
-                        : "bg-zinc-950/90 border border-zinc-850 rounded-tl-none whitespace-pre-wrap"
-                    }`}
-                  >
+                {isUser ? (
+                  <div className="bg-[#2A2A2A] text-zinc-200 text-[15px] px-5 py-3.5 rounded-2xl max-w-[85%] leading-relaxed">
                     {msg.text}
                   </div>
-                  <span className="text-[9px] text-zinc-500 font-mono block px-1 text-right">
-                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-              </div>
-            ))}
-
-            {loading && (
-              <div className="flex gap-3.5 items-start mr-auto max-w-[80%]">
-                <div className="h-8 w-8 rounded-lg bg-zinc-950 border border-zinc-800 text-amber-500 flex items-center justify-center animate-spin">
-                  <Dumbbell size={14} />
-                </div>
-                <div className="bg-zinc-950/80 border border-zinc-850 rounded-2xl rounded-tl-none p-4 text-xs text-zinc-400 font-mono">
-                  Coach is calculating sets and proteins...
-                  <div className="h-1 w-full bg-zinc-900 rounded overflow-hidden mt-2">
-                    <div className="h-full bg-amber-500 rounded animate-pulse w-2/3"></div>
+                ) : (
+                  <div className="max-w-full">
+                    <div className="text-zinc-100 text-[15px] leading-relaxed whitespace-pre-wrap">
+                      {msg.text}
+                    </div>
+                    {/* Action Buttons purely decorative matching the UI */}
+                    <div className="flex items-center gap-2.5 mt-4">
+                      <button className="h-8 w-8 rounded-lg border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 transition-colors">
+                        <Copy size={13} />
+                      </button>
+                      <button className="h-8 w-8 rounded-lg border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 transition-colors">
+                        <ThumbsUp size={13} />
+                      </button>
+                      <button className="h-8 w-8 rounded-lg border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5 transition-colors">
+                        <ThumbsDown size={13} />
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Quick chip loaders list */}
-          <div className="bg-zinc-950/60 p-4 border-t border-zinc-850 space-y-2">
-            <span className="inline-flex items-center gap-1 text-[10px] text-zinc-500 uppercase tracking-widest font-mono">
-              <HelpCircle size={10} className="text-amber-500" />
-              Quick Fitness templates:
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {quickPrompts.map((chip, index) => (
-                <button
-                  key={index}
-                  onClick={() => handlePromptClick(chip.query)}
-                  disabled={loading}
-                  className="px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-amber-500/40 text-[11px] text-zinc-300 hover:text-white font-medium transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {chip.label}
-                </button>
-              ))}
+            );
+          })}
+          
+          {loading && (
+            <div className="flex justify-start">
+               <div className="text-zinc-400 text-sm animate-pulse">
+                 Coach is thinking...
+               </div>
             </div>
-          </div>
-
-          {/* Send Area form form */}
-          <div className="p-4 bg-zinc-950 border-t border-zinc-800">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendMessage(inputVal);
-              }}
-              className="flex items-center gap-2"
-            >
-              <input
-                type="text"
-                required
-                disabled={loading}
-                value={inputVal}
-                onChange={(e) => setInputVal(e.target.value)}
-                placeholder="Ask our coaches e.g. 'Generate an lower ab routine'..."
-                className="flex-1 bg-zinc-900 focus:bg-zinc-900/60 text-xs px-4 py-3.5 rounded-xl border border-zinc-800 focus:border-amber-500 text-white focus:outline-none focus:ring-1 focus:ring-amber-500/40 disabled:opacity-60"
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className="h-11 w-11 shrink-0 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-bold flex items-center justify-center transition-all shadow-md active:scale-95 disabled:opacity-50"
-                id="btn-chat-send"
-              >
-                <Send size={15} />
-              </button>
-            </form>
-          </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
       </div>
-    </section>
+
+      {/* Input Box Area */}
+      <div className="p-4 bg-black border-t border-transparent pb-6 shrink-0">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage(inputVal);
+          }}
+          className="relative flex items-center w-full max-w-3xl mx-auto"
+        >
+          <input
+            type="text"
+            value={inputVal}
+            onChange={(e) => setInputVal(e.target.value)}
+            disabled={loading}
+            placeholder="Ask your Digital Coach..."
+            className="w-full bg-[#1C1C1E] text-[15px] text-white rounded-full pl-5 pr-14 py-4 focus:outline-none placeholder:text-[#6C6C70]"
+          />
+          <button
+            type="submit"
+            disabled={loading || !inputVal.trim()}
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-[34px] w-[34px] bg-[#8B5CF6] hover:bg-[#7C3AED] disabled:bg-[#8B5CF6]/50 rounded-full flex items-center justify-center transition-colors text-white disabled:opacity-75"
+          >
+            <ArrowUp size={16} strokeWidth={2.5} />
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }

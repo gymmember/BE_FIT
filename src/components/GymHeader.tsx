@@ -1,15 +1,29 @@
-import React from "react";
-import { Dumbbell, MapPin, Phone, Instagram, LogIn, LogOut, UserCheck } from "lucide-react";
+import React, { useState } from "react";
+import { Dumbbell, MapPin, Phone, Instagram, LogIn, LogOut, UserCheck, Menu, X } from "lucide-react";
 import { GYM_DETAILS } from "../data";
 import { useFirebase } from "../context/FirebaseContext";
 
 interface GymHeaderProps {
   logoUrl?: string;
   onOpenAuth: () => void;
+  isProfileOpen?: boolean;
+  onOpenProfile?: () => void;
 }
 
-export default function GymHeader({ logoUrl, onOpenAuth }: GymHeaderProps) {
+export default function GymHeader({ logoUrl, onOpenAuth, isProfileOpen, onOpenProfile }: GymHeaderProps) {
   const { user, logout } = useFirebase();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navLinks = [
+    { href: "#", label: "Home" },
+    { href: "#welcome-section", label: "About" },
+    { href: "#pricing-plans-section", label: "Plans" },
+    { href: "#gallery-section", label: "Gallery" },
+    { href: "#achievements-section", label: "Achievements" },
+    { href: "#calorie-calculator-section", label: "Calorie Calc" },
+    { href: "#faq-section", label: "FAQ" },
+    { href: "#contact-section", label: "Contact" },
+  ];
 
   return (
     <header className="sticky top-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
@@ -27,7 +41,7 @@ export default function GymHeader({ logoUrl, onOpenAuth }: GymHeaderProps) {
                   BE FIT
                 </h1>
                 <p className="text-[10px] uppercase tracking-[0.25em] text-amber-500/80 font-mono">
-                  THE GYM
+                  COMMIT TO BE FIT
                 </p>
               </div>
             </>
@@ -44,7 +58,7 @@ export default function GymHeader({ logoUrl, onOpenAuth }: GymHeaderProps) {
                   BE FIT
                 </h1>
                 <p className="text-[10px] uppercase tracking-[0.25em] text-amber-500/80 font-mono">
-                  THE GYM • JHARGRAM
+                  COMMIT TO BE FIT
                 </p>
               </div>
             </>
@@ -52,15 +66,10 @@ export default function GymHeader({ logoUrl, onOpenAuth }: GymHeaderProps) {
         </div>
 
         {/* Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-6 xl:gap-8 flex-1 justify-center">
-          <a href="#" className="text-white hover:text-[#ff4a11] font-bold text-[15px] transition-colors">Home</a>
-          <a href="#welcome-section" className="text-white hover:text-[#ff4a11] font-bold text-[15px] transition-colors">About</a>
-          <a href="#pricing-plans-section" className="text-white hover:text-[#ff4a11] font-bold text-[15px] transition-colors">Plans</a>
-          <a href="#gallery-section" className="text-white hover:text-[#ff4a11] font-bold text-[15px] transition-colors">Gallery</a>
-          <a href="#achievements-section" className="text-white hover:text-[#ff4a11] font-bold text-[15px] transition-colors">Achievements</a>
-          <a href="#calorie-calculator-section" className="text-white hover:text-[#ff4a11] font-bold text-[15px] transition-colors">Calorie Calc</a>
-          <a href="#faq-section" className="text-white hover:text-[#ff4a11] font-bold text-[15px] transition-colors">FAQ</a>
-          <a href="#contact-section" className="text-white hover:text-[#ff4a11] font-bold text-[15px] transition-colors">Contact</a>
+        <nav className="hidden xl:flex items-center gap-6 flex-1 justify-center">
+          {navLinks.map((link, idx) => (
+            <a key={idx} href={link.href} className="text-white hover:text-[#ff4a11] font-bold text-[15px] transition-colors">{link.label}</a>
+          ))}
         </nav>
 
         {/* Authentication Controls */}
@@ -71,9 +80,10 @@ export default function GymHeader({ logoUrl, onOpenAuth }: GymHeaderProps) {
               <img
                 src={user.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=64"}
                 alt={user.displayName || "Member"}
-                className="h-8.5 w-8.5 rounded-full border border-amber-500/50 object-cover cursor-pointer hover:border-amber-400 transition-colors"
+                className={`h-8.5 w-8.5 rounded-full border ${isProfileOpen ? "border-amber-500" : "border-amber-500/50"} object-cover cursor-pointer hover:border-amber-400 transition-colors`}
                 referrerPolicy="no-referrer"
                 title={user.displayName || "Google Member"}
+                onClick={onOpenProfile}
               />
               <button
                 onClick={logout}
@@ -95,8 +105,47 @@ export default function GymHeader({ logoUrl, onOpenAuth }: GymHeaderProps) {
               <span>Login / Sign Up</span>
             </button>
           )}
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="xl:hidden p-2 text-zinc-400 hover:text-white transition-colors ml-1"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle mobile menu"
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Menu Dropdown */}
+      {isMobileMenuOpen && (
+        <div className="xl:hidden border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-xl absolute top-full left-0 w-full shadow-xl pb-4">
+          <nav className="flex flex-col py-4 px-6 space-y-5">
+            {navLinks.map((link, idx) => (
+              <a 
+                key={idx} 
+                href={link.href} 
+                className="text-zinc-300 hover:text-amber-500 font-bold text-lg transition-colors block"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {link.label}
+              </a>
+            ))}
+            {user && (
+              <button
+                onClick={() => {
+                  logout();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex sm:hidden items-center gap-2 text-red-500 hover:text-red-400 font-bold text-lg mt-4 pt-4 border-t border-zinc-800 transition-colors"
+              >
+                <LogOut size={20} />
+                <span>Sign Out</span>
+              </button>
+            )}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

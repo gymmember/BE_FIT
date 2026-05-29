@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { ArrowRight, Trophy, Zap, Shield, Flame } from "lucide-react";
 import { GYM_DETAILS } from "../data";
 
@@ -7,6 +7,27 @@ interface GymHeroProps {
 }
 
 export default function GymHero({ heroImageUrl }: GymHeroProps) {
+  const [heroTilt, setHeroTilt] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const normX = (x / rect.width) - 0.5;
+    const normY = (y / rect.height) - 0.5;
+
+    setHeroTilt({
+      x: normY * -15, // elegant max tilt 15deg
+      y: normX * 15
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setHeroTilt({ x: 0, y: 0 });
+  };
+
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
@@ -87,15 +108,30 @@ export default function GymHero({ heroImageUrl }: GymHeroProps) {
           </div>
         </div>
 
-        {/* Feature Cards / Focus Block */}
-        <div id="facilities-section" className="lg:col-span-5 space-y-4">
-          <div className="bg-zinc-900/80 backdrop-blur-md border border-zinc-800 p-6 rounded-2xl shadow-xl space-y-5">
-            <h3 className="text-lg font-bold font-sans text-white border-b border-zinc-800 pb-3 flex items-center gap-2">
-              <Trophy size={18} className="text-amber-500" />
+        {/* Feature Cards / Focus Block in 3D */}
+        <div 
+          id="facilities-section" 
+          className="lg:col-span-5 relative"
+          style={{ perspective: "1000px" }}
+        >
+          <div 
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className="bg-zinc-900/85 backdrop-blur-md border border-zinc-800 p-6 rounded-2xl shadow-[0_25px_55px_-10px_rgba(0,0,0,0.85)] space-y-5 transition-all duration-200 ease-out cursor-pointer"
+            style={{
+              transformStyle: "preserve-3d",
+              transform: `rotateX(${heroTilt.x}deg) rotateY(${heroTilt.y}deg) scale3d(1.02, 1.02, 1.02)`
+            }}
+          >
+            <h3 
+              className="text-lg font-bold font-sans text-white border-b border-zinc-800 pb-3 flex items-center gap-2"
+              style={{ transform: "translateZ(30px)" }}
+            >
+              <Trophy size={18} className="text-amber-500 animate-bounce" />
               Flagship Facilities
             </h3>
 
-            <div className="space-y-4">
+            <div className="space-y-4" style={{ transform: "translateZ(20px)" }}>
               {GYM_DETAILS.facilities.slice(0, 4).map((fact, index) => (
                 <div key={index} className="flex gap-3">
                   <div className="h-6 w-6 mt-0.5 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center shrink-0">
@@ -108,7 +144,10 @@ export default function GymHero({ heroImageUrl }: GymHeroProps) {
               ))}
             </div>
 
-            <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/20 flex items-center gap-3">
+            <div 
+              className="p-4 rounded-xl bg-amber-950/25 border border-amber-500/25 flex items-center gap-3 shadow-inner"
+              style={{ transform: "translateZ(40px)" }}
+            >
               <Shield size={20} className="text-amber-500 shrink-0" />
               <div className="text-xs text-zinc-400">
                 <span className="font-semibold text-white block">Verified Coach Presence</span>

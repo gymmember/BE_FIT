@@ -5,40 +5,25 @@ import { useFirebase } from "../context/FirebaseContext";
 const HARDCODED_PLANS = [
   {
     id: "h_1",
-    name: "Standard",
-    price: "₹1,000",
+    name: "Student",
+    price: "₹700",
     period: "month",
     features: [
+      "AC",
       "Access to cardio and weights",
-      "Free locker usage",
-      "Shower facilities",
-      "1 Group class per week"
+      "All access"
     ]
   },
   {
     id: "h_2",
-    name: "Pro Athlete",
-    price: "₹2,500",
+    name: "Others",
+    price: "₹900",
     period: "month",
     isPopular: true,
     features: [
-      "24/7 Priority Access",
-      "Premium locker with laundry",
-      "1-on-1 Personal Training (4x)",
-      "Unlimited group classes",
-      "Sauna access"
-    ]
-  },
-  {
-    id: "h_3",
-    name: "Annual Core",
-    price: "₹10,000",
-    period: "year",
-    features: [
+      "AC",
       "Access to cardio and weights",
-      "Free locker usage",
-      "1 Group class per week",
-      "2 Months free included"
+      "All access"
     ]
   }
 ];
