@@ -5,7 +5,8 @@ service cloud.firestore {
     function isAdmin() {
       return request.auth != null && (
         request.auth.uid == '0YvEuJTQlUTq60Bxehxg5z4F1gC3' ||
-        (request.auth.token.get('email', '') == 'gymadmin@gmail.com')
+        request.auth.token.email == 'gymadmin@gmail.com' ||
+        request.auth.token.email == 'itssabujjr@gmail.com'
       );
     }
 
@@ -36,6 +37,25 @@ service cloud.firestore {
       allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if request.auth != null && (request.resource.data.userId == request.auth.uid || isAdmin());
       allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    match /member_logins/{username} {
+      allow read, write: if isAdmin();
+    }
+    
+    match /trainers/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /equipments/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /enquiries/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

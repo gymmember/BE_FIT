@@ -4,10 +4,21 @@ import { PRICING_PLANS } from "../data";
 import { useFirebase } from "../context/FirebaseContext";
 
 export default function MembershipAndPricing() {
-  const { user, passes, addPass } = useFirebase();
+  const { user, passes, addPass, plans = [] } = useFirebase();
+  const displayPlans = plans.length > 0 ? plans : PRICING_PLANS;
   const [frequency, setFrequency] = useState<number>(4); // Workouts per week
   const [selectedPlan, setSelectedPlan] = useState<string>("shredded-quarter");
   
+  // Real-time selected plan sync
+  React.useEffect(() => {
+    if (plans.length > 0) {
+      const exists = plans.some(p => p.id === selectedPlan);
+      if (!exists) {
+        setSelectedPlan(plans[0].id);
+      }
+    }
+  }, [plans]);
+
   // Simulated Invoice state
   const [invoiceName, setInvoiceName] = useState("");
   const [invoiceOpen, setInvoiceOpen] = useState(false);
@@ -20,14 +31,21 @@ export default function MembershipAndPricing() {
     }
   }, [user]);
 
-  // Helper calculation for Session pricing:
-  // Monthly (Class Bronze) = ₹1,500/month. Session cost = 1500 / (frequency * 4.3).
-  // 3-Month Shred = ₹3,800/quarter = ₹1,266/month. Session cost = 1266 / (frequency * 4.3).
-  // Yearly Elite = ₹12,000/year = ₹1,000/month. Session cost = 1000 / (frequency * 4.3).
+  // Helper calculation for Session pricing (made dynamic for any arbitrary custom values)
   const getSessionCost = (planId: string) => {
-    let monthlyEquivalent = 1500;
-    if (planId === "shredded-quarter") monthlyEquivalent = 1266;
-    if (planId === "champion-year") monthlyEquivalent = 1000;
+    const planData = displayPlans.find(p => p.id === planId);
+    if (!planData) return 1500;
+    
+    // Parse numeric value out of string
+    const rawPrice = parseInt(planData.price.replace(/[^\d]/g, "")) || 900;
+    let monthlyEquivalent = rawPrice;
+    
+    const pPeriod = (planData.period || "").toLowerCase();
+    if (pPeriod.includes("quarter") || pPeriod.includes("3") || pPeriod.includes("3-month")) {
+      monthlyEquivalent = Math.round(rawPrice / 3);
+    } else if (pPeriod.includes("year") || pPeriod.includes("annual") || pPeriod.includes("12-month")) {
+      monthlyEquivalent = Math.round(rawPrice / 12);
+    }
 
     const sessionPerMonth = frequency * 4.3;
     if (sessionPerMonth === 0) return 0;
@@ -42,7 +60,7 @@ export default function MembershipAndPricing() {
 
   const handleCheckoutInvoice = async () => {
     if (user) {
-      const planData = PRICING_PLANS.find(p => p.id === selectedPlan);
+      const planData = displayPlans.find(p => p.id === selectedPlan);
       try {
         await addPass(
           invoiceName,
@@ -81,55 +99,60 @@ export default function MembershipAndPricing() {
 
       {/* Main Pricing Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4">
-        {PRICING_PLANS.map((plan) => (
-          <div
-            key={plan.id}
-            className={`bg-gradient-to-b ${plan.color} border p-8 rounded-2xl flex flex-col justify-between transition-all transform hover:-translate-y-1 relative overflow-hidden`}
-          >
-            {plan.popular && (
-              <div className="absolute top-4 right-4 bg-amber-500 text-zinc-950 text-[9px] uppercase font-mono tracking-widest font-extrabold px-3 py-1 rounded-full animate-bounce flex items-center gap-1">
-                <Flame size={10} />
-                Most Popular
-              </div>
-            )}
+        {displayPlans.map((plan) => {
+          const isPlanPopular = plan.isPopular || (plan as any).popular;
+          const bgGradientClass = (plan as any).color || "from-zinc-900 via-zinc-950 to-zinc-900 border-zinc-800 shadow-[0_0_15px_rgba(245,158,11,0.05)]";
 
-            <div className="space-y-6">
-              <div>
-                <h4 className="text-zinc-400 text-xs font-mono uppercase tracking-widest">{plan.name}</h4>
-                <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">{plan.price}</span>
-                  <span className="text-zinc-400 text-xs font-sans">/ {plan.period}</span>
+          return (
+            <div
+              key={plan.id}
+              className={`bg-gradient-to-b ${bgGradientClass} border p-8 rounded-2xl flex flex-col justify-between transition-all transform hover:-translate-y-1 relative overflow-hidden`}
+            >
+              {isPlanPopular && (
+                <div className="absolute top-4 right-4 bg-amber-500 text-zinc-950 text-[9px] uppercase font-mono tracking-widest font-extrabold px-3 py-1 rounded-full animate-bounce flex items-center gap-1">
+                  <Flame size={10} />
+                  Most Popular
                 </div>
+              )}
+
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-zinc-400 text-xs font-mono uppercase tracking-widest">{plan.name}</h4>
+                  <div className="flex items-baseline gap-1 mt-2">
+                    <span className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">{plan.price}</span>
+                    <span className="text-zinc-400 text-xs font-sans">/ {plan.period}</span>
+                  </div>
+                </div>
+
+                {/* Feature checklist */}
+                <ul className="space-y-3.5 border-t border-zinc-800/80 pt-6">
+                  {plan.features.map((feature, idx) => (
+                    <li key={idx} className="flex gap-2.5 items-start text-xs text-zinc-300">
+                      <div className="h-5 w-5 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                        <Check size={11} className="text-amber-500" />
+                      </div>
+                      <span className="font-sans leading-relaxed">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
-              {/* Feature checklist */}
-              <ul className="space-y-3.5 border-t border-zinc-800/80 pt-6">
-                {plan.features.map((feature, idx) => (
-                  <li key={idx} className="flex gap-2.5 items-start text-xs text-zinc-300">
-                    <div className="h-5 w-5 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-                      <Check size={11} className="text-amber-500" />
-                    </div>
-                    <span className="font-sans leading-relaxed">{feature}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="pt-8">
+                <button
+                  onClick={() => setSelectedPlan(plan.id)}
+                  className={`w-full py-4.5 rounded-xl font-bold font-sans text-xs uppercase tracking-wider transition-all select-none ${
+                    selectedPlan === plan.id
+                      ? "bg-amber-500 text-zinc-950 font-extrabold shadow-[0_4px_15px_rgba(245,158,11,0.25)]"
+                      : "bg-zinc-900 text-zinc-300 hover:text-white border border-zinc-850 hover:border-zinc-700"
+                  }`}
+                  id={`btn-plan-${plan.id}`}
+                >
+                  {selectedPlan === plan.id ? "Selected Plan" : "Choose This Plan"}
+                </button>
+              </div>
             </div>
-
-            <div className="pt-8">
-              <button
-                onClick={() => setSelectedPlan(plan.id)}
-                className={`w-full py-4.5 rounded-xl font-bold font-sans text-xs uppercase tracking-wider transition-all select-none ${
-                  selectedPlan === plan.id
-                    ? "bg-amber-500 text-zinc-950 font-extrabold shadow-[0_4px_15px_rgba(245,158,11,0.25)]"
-                    : "bg-zinc-900 text-zinc-300 hover:text-white border border-zinc-850 hover:border-zinc-700"
-                }`}
-                id={`btn-plan-${plan.id}`}
-              >
-                {selectedPlan === plan.id ? "Selected Plan" : "Choose This Plan"}
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Real-time active membership passes */}
@@ -285,10 +308,10 @@ export default function MembershipAndPricing() {
                 <div className="space-y-1.5 text-xs font-mono">
                   <div className="flex justify-between"><span className="text-zinc-500">CLIENT:</span> <span className="text-white font-bold">{invoiceName}</span></div>
                   <div className="flex justify-between"><span className="text-zinc-500">CLUB LOCATION:</span> <span className="text-white">Jhargram, West Bengal</span></div>
-                  <div className="flex justify-between"><span className="text-zinc-500">TIER PACKAGE:</span> <span className="text-amber-400 font-bold uppercase">{PRICING_PLANS.find(p => p.id === selectedPlan)?.name}</span></div>
+                  <div className="flex justify-between"><span className="text-zinc-500">TIER PACKAGE:</span> <span className="text-amber-400 font-bold uppercase">{displayPlans.find(p => p.id === selectedPlan)?.name}</span></div>
                   <div className="flex justify-between"><span className="text-zinc-500">EST. COST PER SESSION:</span> <span className="text-zinc-300 font-bold">₹{getSessionCost(selectedPlan)}</span></div>
                   <div className="h-px bg-zinc-800 my-2"></div>
-                  <div className="flex justify-between text-sm font-sans font-bold"><span className="text-white">TOTAL PAYABLE:</span> <span className="text-amber-500">{PRICING_PLANS.find(p => p.id === selectedPlan)?.price}</span></div>
+                  <div className="flex justify-between text-sm font-sans font-bold"><span className="text-white">TOTAL PAYABLE:</span> <span className="text-amber-500">{displayPlans.find(p => p.id === selectedPlan)?.price}</span></div>
                 </div>
 
                 <div className="pt-2 flex gap-3 text-xs">

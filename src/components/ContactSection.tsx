@@ -1,7 +1,46 @@
-import React from "react";
-import { MapPin, Phone, Mail, Facebook, Instagram } from "lucide-react";
+import React, { useState } from "react";
+import { MapPin, Phone, Mail, Facebook, Instagram, CheckCircle2 } from "lucide-react";
 
 export function ContactSection() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !phone.trim() || !message.trim()) return;
+
+    // Get current enquiries
+    const saved = localStorage.getItem("enquiries");
+    const existing = saved ? JSON.parse(saved) : [];
+
+    const newEnquiry = {
+      name: name.trim(),
+      email: email.trim() || "N/A",
+      phone: phone.trim(),
+      query: message.trim(),
+      date: new Date().toISOString().split('T')[0],
+      seen: false
+    };
+
+    const updated = [newEnquiry, ...existing];
+    localStorage.setItem("enquiries", JSON.stringify(updated));
+
+    // Dynamic signal to AdminPanel
+    window.dispatchEvent(new Event("enquiriesUpdated"));
+
+    setSubmitted(true);
+    setName("");
+    setEmail("");
+    setPhone("");
+    setMessage("");
+
+    setTimeout(() => {
+      setSubmitted(false);
+    }, 4500);
+  };
   return (
     <div className="w-full max-w-6xl mx-auto px-4 py-16 sm:py-24 relative z-10" id="contact-section">
       <div className="text-center mb-16 space-y-2">
@@ -72,46 +111,65 @@ export function ContactSection() {
 
         {/* Contact Form */}
         <div className="w-full lg:w-1/2">
-          <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-            <div>
-              <input 
-                type="text" 
-                placeholder="Your Name" 
-                className="w-full bg-[#1a1c29] border border-zinc-800 text-white text-sm rounded-lg focus:ring-[#ff4a11] focus:border-[#ff4a11] block p-3.5 outline-none placeholder-zinc-500 transition-colors"
-                required
-              />
+          {submitted ? (
+            <div className="bg-emerald-950/20 border border-emerald-500/30 p-8 rounded-2xl text-center space-y-4 animate-fade-in">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-extrabold text-white">Message Logged!</h3>
+              <p className="text-sm text-zinc-350 leading-relaxed max-w-sm mx-auto">
+                Thank you for reaching out to **Be Fit Gym** Jhargram. Your physical interest request has been logged and displayed instantly on the admin team panel!
+              </p>
             </div>
-            <div>
-              <input 
-                type="email" 
-                placeholder="Your Email" 
-                className="w-full bg-[#1a1c29] border border-zinc-800 text-white text-sm rounded-lg focus:ring-[#ff4a11] focus:border-[#ff4a11] block p-3.5 outline-none placeholder-zinc-500 transition-colors"
-                required
-              />
-            </div>
-            <div>
-              <input 
-                type="tel" 
-                placeholder="Your Phone" 
-                className="w-full bg-[#1a1c29] border border-zinc-800 text-white text-sm rounded-lg focus:ring-[#ff4a11] focus:border-[#ff4a11] block p-3.5 outline-none placeholder-zinc-500 transition-colors"
-                required
-              />
-            </div>
-            <div>
-              <textarea 
-                placeholder="Your Message" 
-                rows={5}
-                className="w-full bg-[#1a1c29] border border-zinc-800 text-white text-sm rounded-lg focus:ring-[#ff4a11] focus:border-[#ff4a11] block p-3.5 outline-none placeholder-zinc-500 transition-colors resize-none"
-                required
-              ></textarea>
-            </div>
-            <button 
-              type="submit"
-              className="w-full bg-[#ff4a11] hover:bg-[#ff5a22] text-white font-bold py-4 px-6 rounded-lg transition-colors focus:outline-none uppercase tracking-wide text-sm mt-2"
-            >
-              Send Message
-            </button>
-          </form>
+          ) : (
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div>
+                <input 
+                  type="text" 
+                  placeholder="Your Name" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-[#1a1c29] border border-zinc-800 text-white text-sm rounded-lg focus:ring-[#ff4a11] focus:border-[#ff4a11] block p-3.5 outline-none placeholder-zinc-500 transition-colors"
+                  required
+                />
+              </div>
+              <div>
+                <input 
+                  type="email" 
+                  placeholder="Your Email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-[#1a1c29] border border-zinc-800 text-white text-sm rounded-lg focus:ring-[#ff4a11] focus:border-[#ff4a11] block p-3.5 outline-none placeholder-zinc-500 transition-colors"
+                />
+              </div>
+              <div>
+                <input 
+                  type="tel" 
+                  placeholder="Your Phone Number" 
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full bg-[#1a1c29] border border-zinc-800 text-white text-sm rounded-lg focus:ring-[#ff4a11] focus:border-[#ff4a11] block p-3.5 outline-none placeholder-zinc-500 transition-colors"
+                  required
+                />
+              </div>
+              <div>
+                <textarea 
+                  placeholder="Your Message / Query details" 
+                  rows={5}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="w-full bg-[#1a1c29] border border-zinc-800 text-white text-sm rounded-lg focus:ring-[#ff4a11] focus:border-[#ff4a11] block p-3.5 outline-none placeholder-zinc-500 transition-colors resize-none"
+                  required
+                ></textarea>
+              </div>
+              <button 
+                type="submit"
+                className="w-full bg-[#ff4a11] hover:bg-[#ff5a22] text-white font-bold py-4 px-6 rounded-lg transition-colors focus:outline-none uppercase tracking-wide text-sm mt-2"
+              >
+                Send Message
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>

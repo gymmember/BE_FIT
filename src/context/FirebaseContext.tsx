@@ -44,6 +44,10 @@ export interface MembershipPass {
   payablePrice: string;
   sessionFrequency: number;
   createdAt: any;
+  mode?: string;
+  status?: string;
+  notes?: string;
+  paymentDate?: string;
 }
 
 export interface ChatMessageLog {
@@ -63,6 +67,20 @@ export interface PricingPlan {
   order: number;
 }
 
+export interface MemberLogin {
+  username: string;
+  password: string;
+  displayName: string;
+  createdAt: any;
+  mobile?: string;
+  plan?: string;
+  joinDate?: string;
+  age?: string;
+  gender?: string;
+  address?: string;
+  trainer?: string;
+}
+
 interface FirebaseContextType {
   user: User | null;
   loading: boolean;
@@ -72,6 +90,8 @@ interface FirebaseContextType {
   chatMessages: ChatMessageLog[];
   allUserProfiles: UserProfile[];
   plans: PricingPlan[];
+  memberLogins: MemberLogin[];
+  globalError: string | null;
   loginWithGoogle: () => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
@@ -91,11 +111,30 @@ interface FirebaseContextType {
     planId: string,
     planName: string,
     payablePrice: string,
-    sessionFrequency: number
+    sessionFrequency: number,
+    mode?: string,
+    status?: string,
+    notes?: string,
+    paymentDate?: string
   ) => Promise<void>;
   sendChatMessage: (text: string, sender: "user" | "bot") => Promise<void>;
   updatePlan: (plan: PricingPlan) => Promise<void>;
   deletePlan: (planId: string) => Promise<void>;
+  addMemberLogin: (
+    username: string,
+    password: string,
+    displayName: string,
+    mobile?: string,
+    plan?: string,
+    joinDate?: string,
+    age?: string,
+    gender?: string,
+    address?: string,
+    trainer?: string
+  ) => Promise<void>;
+  editMemberLogin: (username: string, updates: Partial<MemberLogin>) => Promise<void>;
+  deleteMemberLogin: (username: string) => Promise<void>;
+  deletePass: (passId: string) => Promise<void>;
 }
 
 const FirebaseContext = createContext<FirebaseContextType | undefined>(undefined);
@@ -109,6 +148,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const [chatMessages, setChatMessages] = useState<ChatMessageLog[]>([]);
   const [allUserProfiles, setAllUserProfiles] = useState<UserProfile[]>([]);
   const [plans, setPlans] = useState<PricingPlan[]>([]);
+  const [memberLogins, setMemberLogins] = useState<MemberLogin[]>([]);
+  const [globalError, setGlobalError] = useState<string | null>(null);
 
   // 1. Auth Listener
   useEffect(() => {
@@ -120,6 +161,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         setPasses([]);
         setChatMessages([]);
         setAllUserProfiles([]);
+        setMemberLogins([]);
       }
       setLoading(false);
     });
@@ -129,7 +171,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   // 1b. Fetch Plans (publicly accessible)
   useEffect(() => {
     const collectionPath = "plans";
-    const q = query(collection(db, collectionPath), orderBy("order", "asc"));
+    const q = query(collection(db, collectionPath));
 
     const unsubscribe = onSnapshot(
       q,
@@ -138,6 +180,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         querySnap.forEach((docSnap) => {
           tempPlans.push(docSnap.data() as PricingPlan);
         });
+        // Sort in memory to avoid index requirements or missing order field issues
+        tempPlans.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         setPlans(tempPlans);
       },
       (error) => {
@@ -175,7 +219,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     const collectionPath = "bookings";
-    const q = user.email === "gymadmin@gmail.com"
+    const userEmail = (user.email || "").toLowerCase();
+    const q = (userEmail === "gymadmin@gmail.com" || userEmail === "itssabujjr@gmail.com")
       ? query(collection(db, collectionPath))
       : query(collection(db, collectionPath), where("userId", "==", user.uid));
     
@@ -201,7 +246,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     const collectionPath = "passes";
-    const q = user.email === "gymadmin@gmail.com"
+    const userEmail = (user.email || "").toLowerCase();
+    const q = (userEmail === "gymadmin@gmail.com" || userEmail === "itssabujjr@gmail.com")
       ? query(collection(db, collectionPath))
       : query(collection(db, collectionPath), where("userId", "==", user.uid));
 
@@ -224,7 +270,12 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
 
   // 4b. Sync all user profiles for Admin
   useEffect(() => {
-    if (!user || user.email !== "gymadmin@gmail.com") {
+    if (!user) {
+      setAllUserProfiles([]);
+      return;
+    }
+    const safeEmail = (user.email || "").toLowerCase();
+    if (safeEmail !== "gymadmin@gmail.com" && safeEmail !== "itssabujjr@gmail.com") {
       setAllUserProfiles([]);
       return;
     }
@@ -243,6 +294,43 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       },
       (error) => {
         handleFirestoreError(error, OperationType.GET, collectionPath);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // 4c. Sync custom member logins for Admin
+  useEffect(() => {
+    if (!user) {
+      setMemberLogins([]);
+      return;
+    }
+
+    const collectionPath = "member_logins";
+    const q = query(collection(db, collectionPath));
+
+    const unsubscribe = onSnapshot(
+      q,
+      (querySnap) => {
+        const temp: MemberLogin[] = [];
+        querySnap.forEach((docSnap) => {
+          temp.push(docSnap.data() as MemberLogin);
+        });
+
+        console.log("Fetched member logins:", temp);
+
+        const sorted = temp.sort((a, b) => {
+          const tA = a.createdAt?.seconds ? a.createdAt.seconds : (a.createdAt instanceof Date ? a.createdAt.getTime() / 1000 : 0);
+          const tB = b.createdAt?.seconds ? b.createdAt.seconds : (b.createdAt instanceof Date ? b.createdAt.getTime() / 1000 : 0);
+          return tB - tA;
+        });
+
+        setMemberLogins([...sorted]);
+      },
+      (error: any) => {
+        handleFirestoreError(error, OperationType.GET, collectionPath);
+        setGlobalError("Failed to fetch member logins: " + error.message);
       }
     );
 
@@ -335,6 +423,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       const docRef = doc(db, "user_profiles", user.uid);
       await setDoc(docRef, {
         userId: user.uid,
+        displayName: user.displayName || user.email?.split("@")[0] || "Athlete",
+        email: user.email || "",
         weight,
         height,
         bmi,
@@ -344,6 +434,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
     }
   };
 
@@ -374,6 +465,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
     }
   };
 
@@ -385,6 +477,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       await deleteDoc(doc(db, "bookings", bookingId));
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, path);
+      throw error;
     }
   };
 
@@ -394,7 +487,11 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     planId: string,
     planName: string,
     payablePrice: string,
-    sessionFrequency: number
+    sessionFrequency: number,
+    mode?: string,
+    status?: string,
+    notes?: string,
+    paymentDate?: string
   ) => {
     if (!user) return;
     const passId = `ps_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
@@ -409,10 +506,15 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         planName,
         payablePrice,
         sessionFrequency,
-        createdAt: new Date()
+        createdAt: new Date(),
+        mode: mode || "Cash",
+        status: status || "Paid",
+        notes: notes || "",
+        paymentDate: paymentDate || ""
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
     }
   };
 
@@ -431,11 +533,12 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
     }
   };
 
   const updatePlan = async (plan: PricingPlan) => {
-    if (!user || user.email !== "gymadmin@gmail.com") return;
+    if (!user) throw new Error("You do not have permission.");
     // Auto-generate id if new
     const finalPlan = { ...plan };
     if (!finalPlan.id) {
@@ -446,16 +549,96 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         await setDoc(doc(db, "plans", finalPlan.id), finalPlan);
     } catch (error) {
         handleFirestoreError(error, OperationType.WRITE, path);
+        throw error;
     }
   };
 
   const deletePlan = async (planId: string) => {
-    if (!user || user.email !== "gymadmin@gmail.com") return;
+    if (!user) throw new Error("You do not have permission.");
     const path = `plans/${planId}`;
     try {
         await deleteDoc(doc(db, "plans", planId));
     } catch (error) {
         handleFirestoreError(error, OperationType.DELETE, path);
+        throw error;
+    }
+  };
+
+  const addMemberLogin = async (
+    username: string,
+    password: string,
+    displayName: string,
+    mobile?: string,
+    plan?: string,
+    joinDate?: string,
+    age?: string,
+    gender?: string,
+    address?: string,
+    trainer?: string
+  ) => {
+    if (!user) throw new Error("You do not have permission.");
+    const cleanUsername = username.toLowerCase().trim();
+    const docPath = `member_logins/${cleanUsername}`;
+    try {
+      await setDoc(doc(db, "member_logins", cleanUsername), {
+        username: cleanUsername,
+        password,
+        displayName,
+        createdAt: new Date(),
+        mobile: mobile || "89123******",
+        plan: plan || "Monthly",
+        joinDate: joinDate || new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        age: age || "",
+        gender: gender || "",
+        address: address || "",
+        trainer: trainer || ""
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, docPath);
+      throw error;
+    }
+  };
+
+  const editMemberLogin = async (username: string, updates: Partial<MemberLogin>) => {
+    if (!user) throw new Error("You do not have permission.");
+    const cleanUsername = username.toLowerCase().trim();
+    const docPath = `member_logins/${cleanUsername}`;
+    try {
+      const docRef = doc(db, "member_logins", cleanUsername);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        await setDoc(docRef, {
+          ...docSnap.data(),
+          ...updates,
+          createdAt: docSnap.data().createdAt || new Date()
+        });
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, docPath);
+      throw error;
+    }
+  };
+
+  const deleteMemberLogin = async (username: string) => {
+    if (!user) throw new Error("You do not have permission.");
+    const cleanUsername = username.toLowerCase().trim();
+    const docPath = `member_logins/${cleanUsername}`;
+    try {
+      await deleteDoc(doc(db, "member_logins", cleanUsername));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, docPath);
+      throw error;
+    }
+  };
+
+  const deletePass = async (passId: string) => {
+    if (!user) throw new Error("You do not have permission.");
+    const path = `passes/${passId}`;
+    try {
+      await deleteDoc(doc(db, "passes", passId));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, path);
+      throw error;
     }
   };
 
@@ -470,6 +653,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         chatMessages,
         allUserProfiles,
         plans,
+        memberLogins,
+        globalError,
         loginWithGoogle,
         signUpWithEmail,
         signInWithEmail,
@@ -480,7 +665,11 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         addPass,
         sendChatMessage,
         updatePlan,
-        deletePlan
+        deletePlan,
+        addMemberLogin,
+        editMemberLogin,
+        deleteMemberLogin,
+        deletePass
       }}
     >
       {children}

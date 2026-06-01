@@ -86,12 +86,14 @@ export default function App() {
       {/* Container wrapper */}
       <div className="relative z-10 flex-1 flex flex-col">
         {/* Navigation Head */}
-        <GymHeader 
-          logoUrl={LOGO_IMAGE_URL} 
-          onOpenAuth={() => setIsAuthModalOpen(true)}
-          isProfileOpen={isProfileOpen}
-          onOpenProfile={() => setIsProfileOpen(!isProfileOpen)}
-        />
+        {(!user || (user.email !== "gymadmin@gmail.com" && user.email !== "itssabujjr@gmail.com")) && (
+          <GymHeader 
+            logoUrl={LOGO_IMAGE_URL} 
+            onOpenAuth={() => setIsAuthModalOpen(true)}
+            isProfileOpen={isProfileOpen}
+            onOpenProfile={() => setIsProfileOpen(!isProfileOpen)}
+          />
+        )}
 
         {/* Loading Spinner */}
         {loading ? (
@@ -128,7 +130,7 @@ export default function App() {
                 {/* Contact Section */}
                 <ContactSection />
               </div>
-            ) : user.email === "gymadmin@gmail.com" ? (
+            ) : (user.email === "gymadmin@gmail.com" || user.email === "itssabujjr@gmail.com") ? (
               
               /* SCENARIO 2: ADMIN IS LOGGED IN */
               <div className="animate-fade-in" id="admin-hub-wrapper">
@@ -264,7 +266,7 @@ export default function App() {
       />
 
       {/* Gym Brand Coordinates Footer */}
-      {user?.email !== "gymadmin@gmail.com" && !isProfileOpen && (
+      {(user?.email !== "gymadmin@gmail.com" && user?.email !== "itssabujjr@gmail.com") && !isProfileOpen && (
         <div className="relative z-10">
           <GymFooter />
         </div>

@@ -95,15 +95,17 @@ export default function GymHeader({ logoUrl, onOpenAuth, isProfileOpen, onOpenPr
               </button>
             </div>
           ) : (
-            <button
-              onClick={onOpenAuth}
-              className="flex items-center gap-1.5 text-[10px] sm:text-xs bg-amber-500 hover:bg-amber-400 text-zinc-950 border border-transparent px-3 py-1.5 rounded-md uppercase tracking-wider font-sans font-extrabold transition-all shadow-[0_2px_10px_rgba(245,158,11,0.2)]"
-              title="Join or Sign In"
-              id="btn-trigger-auth"
-            >
-              <LogIn size={11} />
-              <span>Login / Sign Up</span>
-            </button>
+            <div className="flex items-center gap-1.5 sm:gap-2.5">
+              <button
+                onClick={onOpenAuth}
+                className="flex items-center gap-1.5 text-[10px] sm:text-xs bg-amber-500 hover:bg-amber-400 text-zinc-950 border border-transparent px-2.5 py-1.5 rounded-md uppercase tracking-wider font-sans font-extrabold transition-all shadow-[0_2px_10px_rgba(245,158,11,0.2)]"
+                title="Join or Sign In"
+                id="btn-trigger-auth"
+              >
+                <LogIn size={11} />
+                <span>Login / Sign Up</span>
+              </button>
+            </div>
           )}
 
           {/* Mobile Menu Toggle */}
