@@ -56,7 +56,9 @@ export default function AdminPanel() {
     allUserProfiles = [],
     bookings = [],
     cancelBooking,
-    globalError
+    globalError,
+    updatePhysicalMemberStatus,
+    deleteUserProfile
   } = useFirebase();
 
   // Active activeTab switcher state
@@ -108,6 +110,8 @@ export default function AdminPanel() {
   const [paymentMode, setPaymentMode] = useState("💵 Cash");
   const [paymentStatus, setPaymentStatus] = useState("🟢 Paid");
   const [paymentNotes, setPaymentNotes] = useState("");
+  const [memberSearchQuery, setMemberSearchQuery] = useState("");
+  const [showMemberDropdown, setShowMemberDropdown] = useState(false);
   const [paymentDate, setPaymentDate] = useState("");
   const [paymentUpdateMembership, setPaymentUpdateMembership] = useState(true);
   const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -133,6 +137,76 @@ export default function AdminPanel() {
   const [newEquipPrice, setNewEquipPrice] = useState("");
   const [showEquipForm, setShowEquipForm] = useState(false);
   const [editingEquipmentIndex, setEditingEquipmentIndex] = useState<number | null>(null);
+
+  // States for physical membership linkage & custom logins
+  const [memberSubTab, setMemberSubTab] = useState<"list" | "requests" | "add">("list");
+  const [newMemberUser, setNewMemberUser] = useState("");
+  const [newMemberPass, setNewMemberPass] = useState("");
+  const [newMemberName, setNewMemberName] = useState("");
+  const [newMemberPhone, setNewMemberPhone] = useState("");
+  const [newMemberPlan, setNewMemberPlan] = useState("Pro Athlete Plan");
+  const [newMemberAge, setNewMemberAge] = useState("");
+  const [newMemberGender, setNewMemberGender] = useState("");
+  const [newMemberAddress, setNewMemberAddress] = useState("");
+  const [newMemberTrainer, setNewMemberTrainer] = useState("Coach Bikram");
+  const [memberActionError, setMemberActionError] = useState<string | null>(null);
+  const [memberActionSuccess, setMemberActionSuccess] = useState<string | null>(null);
+  const [cardIds, setCardIds] = useState<{ [userId: string]: string }>({});
+
+  // Linkage plan selection states
+  const [linkingRequestProfile, setLinkingRequestProfile] = useState<any | null>(null);
+  const [linkingCardId, setLinkingCardId] = useState("");
+  const [linkingPlanId, setLinkingPlanId] = useState("");
+  const [linkingFrequency, setLinkingFrequency] = useState(12);
+  const [linkingPrice, setLinkingPrice] = useState("");
+  const [linkingPaidAmount, setLinkingPaidAmount] = useState<string>("");
+  const [linkingRemainingAmount, setLinkingRemainingAmount] = useState<string>("");
+  const [linkingWorkoutPlan, setLinkingWorkoutPlan] = useState<string>("");
+  const [linkingStartDate, setLinkingStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [linkingEndDate, setLinkingEndDate] = useState<string>("");
+  const [linkingPayments, setLinkingPayments] = useState<any[]>([]);
+  const [linkingCustomNotes, setLinkingCustomNotes] = useState("");
+  const [linkingPaymentMode, setLinkingPaymentMode] = useState("Cash");
+  const [linkingPaymentStatus, setLinkingPaymentStatus] = useState("Paid");
+  const [linkingError, setLinkingError] = useState<string | null>(null);
+  const [linkingSuccess, setLinkingSuccess] = useState<string | null>(null);
+
+  const handleAddMemberLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMemberUser.trim() || !newMemberPass.trim() || !newMemberName.trim()) {
+      setMemberActionError("Please provide all required fields (username, password, name).");
+      return;
+    }
+    setMemberActionError(null);
+    setMemberActionSuccess(null);
+    try {
+      if (addMemberLogin) {
+        await addMemberLogin(
+          newMemberUser.trim().toLowerCase(),
+          newMemberPass,
+          newMemberName.trim(),
+          newMemberPhone,
+          newMemberPlan,
+          new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+          newMemberAge,
+          newMemberGender,
+          newMemberAddress,
+          newMemberTrainer
+        );
+        setMemberActionSuccess(`Custom login credentials successfully registered for ${newMemberName}!`);
+        setNewMemberUser("");
+        setNewMemberPass("");
+        setNewMemberName("");
+        setNewMemberPhone("");
+        setNewMemberAge("");
+        setNewMemberGender("");
+        setNewMemberAddress("");
+        setTimeout(() => setMemberActionSuccess(null), 3000);
+      }
+    } catch (err: any) {
+      setMemberActionError(err.message || "Could not register custom member login.");
+    }
+  };
 
   // States for Enquiries lead board
   const [enquiries, setEnquiries] = useState<any[]>(() => {
@@ -161,6 +235,8 @@ export default function AdminPanel() {
   const [newWorkoutCoach, setNewWorkoutCoach] = useState("Coach Sneha");
   const [newWorkoutDiff, setNewWorkoutDiff] = useState("Intermediate");
   const [newWorkoutMember, setNewWorkoutMember] = useState("All Members");
+  const [workoutMemberSearch, setWorkoutMemberSearch] = useState("");
+  const [showWorkoutMemberDropdown, setShowWorkoutMemberDropdown] = useState(false);
   const [showWorkoutForm, setShowWorkoutForm] = useState(false);
   const [editingWorkoutIndex, setEditingWorkoutIndex] = useState<number | null>(null);
 
@@ -254,7 +330,7 @@ export default function AdminPanel() {
       return;
     }
     try {
-      const finalFeatures = formData.features.filter((f) => f.trim() !== "");
+      const finalFeatures = formData.features.filter((f) => typeof f === 'string' && f.trim() !== "");
       await updatePlan({ ...formData, features: finalFeatures });
       handleCancelPlan();
     } catch (e: any) {
@@ -670,12 +746,12 @@ export default function AdminPanel() {
                     Recent Athlete Profiles
                   </h4>
                   <span className="text-xs text-blue-500 bg-blue-50 px-2 py-0.5 rounded font-mono font-bold">
-                    {allUserProfiles.length} Total
+                    {allUserProfiles.filter(p => p.isPhysicalMemberVerified).length} Total
                   </span>
                 </div>
 
                 <div className="space-y-3 max-h-[290px] overflow-y-auto pr-1">
-                  {allUserProfiles.slice(0, 4).map((p) => {
+                  {allUserProfiles.filter(p => p.isPhysicalMemberVerified).slice(0, 4).map((p) => {
                     const matchedBooking = bookings.find(b => b.userId === p.userId);
                     const matchedPass = passes.find(pa => pa.userId === p.userId);
                     const userDisplayName = p.displayName || (matchedBooking ? matchedBooking.userName : null) || (matchedPass ? matchedPass.clientName : null) || `Athlete #${p.userId.substring(0, 5).toUpperCase()}`;
@@ -691,7 +767,7 @@ export default function AdminPanel() {
                       </div>
                     </div>
                   )})}
-                  {allUserProfiles.length === 0 && (
+                  {allUserProfiles.filter(p => p.isPhysicalMemberVerified).length === 0 && (
                     <p className="text-center py-8 text-xs text-slate-400">No profiles found.</p>
                   )}
                 </div>
@@ -750,7 +826,6 @@ export default function AdminPanel() {
               </div>
 
             </div>
-
           </div>
         )}
 
@@ -765,15 +840,39 @@ export default function AdminPanel() {
                   <h2 className="text-2xl font-extrabold tracking-tight">Members Hub</h2>
                 </div>
                 <p className="text-slate-500 text-xs mt-1.5 font-medium">
-                  Manage gym members, plans, logins, and body profiles.
+                  Manage gym members, sync physical memberships, and create logins.
                 </p>
               </div>
-
             </div>
 
+            {/* Sub-navigation inside Members Hub */}
+            <div className="flex border-b border-slate-100 pb-3 gap-2 flex-wrap animate-fade-in" id="members-subtabs-nav">
+              {[
+                { id: "list", label: `Athlete Profiles (${allUserProfiles.filter(p => p.isPhysicalMemberVerified).length})` },
+                { 
+                  id: "requests", 
+                  label: `Linkage Requests (${allUserProfiles.filter(p => p.physicalMemberStatus === "pending").length})`,
+                  highlight: allUserProfiles.filter(p => p.physicalMemberStatus === "pending").length > 0 
+                },
+              ].map((sub) => (
+                <button
+                  key={sub.id}
+                  onClick={() => setMemberSubTab(sub.id as any)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    memberSubTab === sub.id
+                      ? "bg-[#0b0c13] text-white"
+                      : sub.highlight 
+                        ? "bg-amber-100 text-amber-800 border border-amber-200 animate-pulse" 
+                        : "text-slate-500 hover:text-slate-850 hover:bg-slate-50"
+                  }`}
+                >
+                  {sub.label}
+                </button>
+              ))}
+            </div>
 
-
-            
+            {/* Sub-tab 1: List existing active athlete profiles */}
+            {memberSubTab === "list" && (
               <div className="space-y-6 animate-fade-in">
                 {/* Search Inputs Row */}
                 <div className="flex gap-4 items-center">
@@ -796,37 +895,44 @@ export default function AdminPanel() {
                       <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-extrabold uppercase tracking-wider text-[11px]">
                         <th className="py-4 px-4 font-extrabold w-12 text-center">#</th>
                         <th className="py-4 px-4 font-extrabold">Athlete</th>
+                        <th className="py-4 px-4 font-extrabold">Register Name & Phone</th>
+                        <th className="py-4 px-4 font-extrabold">Gender & Age</th>
+                        <th className="py-4 px-4 font-extrabold">Join Date</th>
+                        <th className="py-4 px-4 font-extrabold">Residential Address</th>
                         <th className="py-4 px-4 font-extrabold text-center">Weight</th>
                         <th className="py-4 px-4 font-extrabold text-center">Height</th>
                         <th className="py-4 px-4 font-extrabold text-center">BMI & Status</th>
                         <th className="py-4 px-4 font-extrabold">Fitness Goal</th>
                         <th className="py-4 px-4 font-extrabold text-right">Last Sync</th>
+                        <th className="py-4 px-4 font-extrabold text-center">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {(() => {
-                        const filteredProfiles = allUserProfiles.filter(p => {
-                          const q = memberQuery.toLowerCase().trim();
-                          if (!q) return true;
-                          const fallbackName = (() => {
-                            const matchedBooking = bookings.find(b => b.userId === p.userId);
-                            if (matchedBooking) return matchedBooking.userName;
-                            const matchedPass = passes.find(pa => pa.userId === p.userId);
-                            if (matchedPass) return matchedPass.clientName;
-                            return `Athlete #${p.userId.substring(0, 5).toUpperCase()}`;
-                          })();
-                          const nameMatch = (p.displayName || fallbackName).toLowerCase().includes(q);
-                          const emailMatch = (p.email || "").toLowerCase().includes(q);
-                          const goalMatch = (p.goal || "").toLowerCase().includes(q);
-                          const catMatch = (p.category || "").toLowerCase().includes(q);
-                          return nameMatch || emailMatch || goalMatch || catMatch;
-                        });
+                        const filteredProfiles = allUserProfiles
+                          .filter(p => p.isPhysicalMemberVerified)
+                          .filter(p => {
+                            const q = memberQuery.toLowerCase().trim();
+                            if (!q) return true;
+                            const fallbackName = (() => {
+                              const matchedBooking = bookings.find(b => b.userId === p.userId);
+                              if (matchedBooking) return matchedBooking.userName;
+                              const matchedPass = passes.find(pa => pa.userId === p.userId);
+                              if (matchedPass) return matchedPass.clientName;
+                              return `Athlete #${p.userId.substring(0, 5).toUpperCase()}`;
+                            })();
+                            const nameMatch = (p.displayName || fallbackName).toLowerCase().includes(q);
+                            const emailMatch = (p.email || "").toLowerCase().includes(q);
+                            const goalMatch = (p.goal || "").toLowerCase().includes(q);
+                            const catMatch = (p.category || "").toLowerCase().includes(q);
+                            return nameMatch || emailMatch || goalMatch || catMatch;
+                          });
 
                         if (filteredProfiles.length === 0) {
                           return (
                             <tr>
-                              <td colSpan={7} className="py-12 text-center text-slate-400 font-mono text-xs">
-                                No self-registered athlete profiles found in database.
+                              <td colSpan={12} className="py-12 text-center text-slate-400 font-mono text-xs">
+                                No verified or self-registered athlete profiles found in database.
                               </td>
                             </tr>
                           );
@@ -845,7 +951,7 @@ export default function AdminPanel() {
                             const cat = (category || "").toLowerCase();
                             if (cat.includes("normal")) return "bg-emerald-50 text-emerald-700 border-emerald-200/40";
                             if (cat.includes("underweight") || cat.includes("overweight")) return "bg-amber-50 text-amber-700 border-amber-200/40";
-                            return "bg-rose-50 text-rose-700 border-rose-200/40";
+                            return "bg-rose-55 text-rose-700 border-rose-200/40";
                           };
 
                           const formatSyncTime = (ts: any) => {
@@ -869,15 +975,50 @@ export default function AdminPanel() {
                             <tr key={p.userId} className="hover:bg-slate-50/50 transition-colors">
                               <td className="py-4 px-4 font-bold text-slate-600 text-center">{index + 1}</td>
                               <td className="py-4 px-4 text-left">
-                                <div className="font-extrabold text-slate-900 text-sm capitalize">{userDisplayName}</div>
+                                <div className="flex items-center gap-2">
+                                  <div className="font-extrabold text-slate-900 text-sm capitalize">{userDisplayName}</div>
+                                  {p.isPhysicalMemberVerified && (
+                                    <span className="bg-emerald-500 text-white font-mono px-1 pb-0.5 rounded text-[8px] uppercase tracking-wide font-black">
+                                      LINKED CLUB MEMBER
+                                    </span>
+                                  )}
+                                </div>
                                 {p.email && <div className="text-[11px] text-slate-400 font-medium font-mono mt-0.5">{p.email}</div>}
+                                {p.isPhysicalMemberVerified && (
+                                  <div className="mt-1.5 text-[10px] text-emerald-800 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100/60 font-mono max-w-max font-bold">
+                                    Club ID: {p.physicalMemberCardId}
+                                  </div>
+                                )}
                                 <div className="text-[9px] text-slate-400 font-mono mt-0.5 font-bold">UID: {p.userId}</div>
                               </td>
-                              <td className="py-4 px-4 text-center font-bold text-slate-700">{p.weight} kg</td>
-                              <td className="py-4 px-4 text-center font-bold text-slate-700">{p.height} cm</td>
+                              <td className="py-4 px-4">
+                                <div className="font-bold text-slate-800 text-sm">{p.physicalMemberName || "N/A"}</div>
+                                {p.physicalMemberPhone && <div className="text-[11px] text-slate-550 font-mono mt-0.5">{p.physicalMemberPhone}</div>}
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="font-semibold text-slate-800 text-xs">
+                                  Gender: <span className="font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded text-[10px] uppercase">{p.physicalMemberGender || "Male"}</span>
+                                </div>
+                                <div className="text-[11px] text-slate-500 font-medium mt-1">
+                                  Age: <span className="font-bold font-mono text-slate-700">{p.physicalMemberAge || "N/A"} yrs</span>
+                                </div>
+                              </td>
+                              <td className="py-4 px-4 font-medium text-slate-700 font-mono text-xs">
+                                {p.physicalMemberJoinDate || "N/A"}
+                              </td>
+                              <td className="py-4 px-4 text-slate-600 font-medium text-xs max-w-xs truncate" title={p.physicalMemberAddress}>
+                                {p.physicalMemberAddress || "N/A"}
+                              </td>
+                              <td className="py-4 px-4 text-center font-bold text-slate-700">{ (p.physicalMemberWeight || p.weight) ? `${p.physicalMemberWeight || p.weight} kg` : "—"}</td>
+                              <td className="py-4 px-4 text-center font-bold text-slate-700">{ (p.physicalMemberHeight || p.height) ? `${p.physicalMemberHeight || p.height} cm` : "—"}</td>
                               <td className="py-4 px-4 text-center">
                                 <span className="inline-flex flex-col items-center">
-                                  <span className="font-mono font-black text-slate-800 text-xs">{p.bmi ? Number(p.bmi).toFixed(1) : "N/A"}</span>
+                                  <span className="font-mono font-black text-slate-800 text-xs">{(p.physicalMemberBmi || p.bmi) ? Number(p.physicalMemberBmi || p.bmi).toFixed(1) : "N/A"}</span>
+                                  {p.physicalMemberStatus === "terminated" && (
+                                    <span className="bg-rose-500 text-white font-mono px-1 pb-0.5 rounded text-[8px] uppercase tracking-wide font-black mt-1">
+                                      TERMINATED
+                                    </span>
+                                  )}
                                   {p.category && (
                                     <span className={`px-2 py-0.5 text-[9px] font-black border rounded-full mt-1 uppercase tracking-tight ${getBMICategoryStyle(p.category)}`}>
                                       {p.category}
@@ -894,6 +1035,41 @@ export default function AdminPanel() {
                               <td className="py-4 px-4 text-right font-semibold text-slate-500 font-mono text-[10px]">
                                 {formatSyncTime(p.updatedAt)}
                               </td>
+                              <td className="py-4 px-4 text-center">
+                                <div className="flex items-center justify-center gap-1">
+                                  <button
+                                    onClick={() => {
+                                      setLinkingRequestProfile(p);
+                                      setLinkingCardId(p.physicalMemberCardId || "");
+                                      setLinkingPlanId(p.physicalMemberPlan || "");
+                                      setLinkingPaidAmount(String(p.physicalMemberPaidAmount || ""));
+                                      setLinkingRemainingAmount(String(p.physicalMemberRemainingAmount || ""));
+                                      setLinkingWorkoutPlan(p.physicalMemberWorkoutPlan || "");
+                                      setLinkingStartDate(p.physicalMemberPlanStartDate || new Date().toISOString().split('T')[0]);
+                                      setLinkingEndDate(p.physicalMemberPlanEndDate || "");
+                                      setLinkingPayments(p.physicalMemberPayments || []);
+                                      setLinkingCustomNotes("Manual admin update");
+                                    }}
+                                    className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-650 rounded-lg transition-all"
+                                    title="Edit Membership"
+                                  >
+                                    <Edit2 size={15} />
+                                  </button>
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        await deleteUserProfile(p.userId);
+                                      } catch (err) {
+                                        console.error("Failed to terminate membership:", err);
+                                      }
+                                    }}
+                                    className="p-2 text-slate-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all"
+                                    title="Terminate Membership"
+                                  >
+                                    <Trash2 size={15} />
+                                  </button>
+                                </div>
+                              </td>
                             </tr>
                           );
                         });
@@ -902,6 +1078,456 @@ export default function AdminPanel() {
                   </table>
                 </div>
               </div>
+            )}
+
+            {/* Sub-tab 2: Linkage requests approval manager */}
+            {memberSubTab === "requests" && (
+              <div className="space-y-4 animate-fade-in" id="requests-subtab-view">
+                <div className="bg-amber-50 border border-amber-200/50 rounded-2xl p-4 flex gap-3 text-amber-900 text-xs">
+                  <span className="text-sm">💡</span>
+                  <p className="leading-relaxed">
+                    These athletes have self-submitted their offline club profile parameters to request linkage. Verify matching names in physical registers and approve details by assigning them a custom Card/Member ID (e.g. <strong>BF-8153</strong>).
+                  </p>
+                </div>
+
+                <div className="overflow-x-auto border border-slate-150 rounded-2xl shadow-sm bg-white">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 font-extrabold uppercase tracking-wider text-[11px]">
+                        <th className="py-4 px-4 font-bold">Athlete Account</th>
+                        <th className="py-4 px-4 font-bold">Register Name & Phone</th>
+                        <th className="py-4 px-4 font-bold">Gender & Age</th>
+                        <th className="py-4 px-4 font-bold">Join Date</th>
+                        <th className="py-4 px-4 font-bold">Weight/Height/BMI</th>
+                        <th className="py-4 px-4 font-bold">Requested Plan</th>
+                        <th className="py-4 px-4 font-bold">Fitness Goal</th>
+                        <th className="py-4 px-4 font-bold">Residential Address</th>
+                        <th className="py-4 px-4 font-bold">Requested At</th>
+                        <th className="py-4 px-4 font-bold w-48 text-center text-slate-700">Verification Console</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {(() => {
+                        const pendingReqs = allUserProfiles.filter(p => p.physicalMemberStatus === "pending");
+                        if (pendingReqs.length === 0) {
+                          return (
+                            <tr>
+                              <td colSpan={10} className="py-12 text-center text-slate-400 font-mono text-xs">
+                                No physical membership linkage requests are pending review.
+                              </td>
+                            </tr>
+                          );
+                        }
+
+                        return pendingReqs.map((req) => (
+                          <tr key={req.userId} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="py-4 px-4">
+                              <div className="font-extrabold text-slate-900 text-sm capitalize">{req.displayName || "Online Athlete"}</div>
+                              <div className="text-[11px] text-zinc-400 font-mono mt-0.5">{req.email || "N/A"}</div>
+                              <div className="text-[9px] text-slate-400 font-mono">UID: {req.userId}</div>
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="font-bold text-slate-800 text-sm">{req.physicalMemberName || "N/A"}</div>
+                              <div className="text-[11px] text-slate-550 font-mono mt-0.5">{req.physicalMemberPhone || "N/A"}</div>
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="font-semibold text-slate-800 text-xs">
+                                Gender: <span className="font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded text-[10px] uppercase">{req.physicalMemberGender || "Male"}</span>
+                              </div>
+                              <div className="text-[11px] text-slate-500 font-medium mt-1">
+                                Age: <span className="font-bold font-mono text-slate-700">{req.physicalMemberAge || "N/A"} yrs</span>
+                              </div>
+                            </td>
+                            <td className="py-4 px-4 font-medium text-slate-700 font-mono text-xs">
+                              {req.physicalMemberJoinDate || "N/A"}
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-slate-700 text-xs">{req.physicalMemberWeight ? `${req.physicalMemberWeight} kg` : "—"} / {req.physicalMemberHeight ? `${req.physicalMemberHeight} cm` : "—"}</span>
+                                <span className="text-[10px] font-mono text-amber-600 font-black tracking-tighter mt-0.5">BMI: {req.physicalMemberBmi || "N/A"}</span>
+                              </div>
+                            </td>
+                            <td className="py-4 px-4">
+                              <span className="font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-[10px] uppercase border border-amber-200">
+                                {req.physicalMemberPlan || "Not Selected"}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4">
+                              <span className="font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-[10px] uppercase border border-indigo-200">
+                                {req.physicalMemberGoal || "Not Selected"}
+                              </span>
+                            </td>
+                            <td className="py-4 px-4 text-slate-600 font-medium text-xs max-w-xs truncate" title={req.physicalMemberAddress}>
+                              {req.physicalMemberAddress || "N/A"}
+                            </td>
+                            <td className="py-4 px-4 text-slate-500 font-mono text-[10px]">
+                              {req.physicalMemberRequestedAt ? new Date(req.physicalMemberRequestedAt).toLocaleDateString("en-IN") : "N/A"}
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex flex-col gap-2 max-w-sm mx-auto">
+                                <input
+                                  type="text"
+                                  placeholder="Type Card ID (e.g. BF-2901)"
+                                  value={cardIds[req.userId] || ""}
+                                  onChange={(e) => setCardIds({ ...cardIds, [req.userId]: e.target.value })}
+                                  className="w-full bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-mono text-slate-800 focus:outline-none focus:border-[#0b0c13] transition-all placeholder:text-slate-400"
+                                />
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => {
+                                      let assignedCode = cardIds[req.userId]?.trim();
+                                      if (!assignedCode) {
+                                        // Auto-generate a random fallback member ID if left empty so the modal opens seamlessly
+                                        assignedCode = `BF-${Math.floor(1000 + Math.random() * 9000)}`;
+                                      }
+                                      setLinkingRequestProfile(req);
+                                      setLinkingCardId(assignedCode);
+                                      const defaultPlan = plans && plans[0] ? plans[0] : null;
+                                      setLinkingPlanId(defaultPlan ? defaultPlan.id : "");
+                                      const priceVal = defaultPlan ? defaultPlan.price : "₹1200";
+                                      setLinkingPrice(priceVal);
+                                      setLinkingPaidAmount(priceVal.replace(/[^0-9]/g, ''));
+                                      setLinkingRemainingAmount("0");
+                                      setLinkingWorkoutPlan("Standard Bodybuilding");
+                                      setLinkingStartDate(new Date().toISOString().split('T')[0]);
+                                      const futureDate = new Date();
+                                      futureDate.setMonth(futureDate.getMonth() + 1);
+                                      setLinkingEndDate(futureDate.toISOString().split('T')[0]);
+                                      setLinkingPayments([
+                                        { month: new Date().toLocaleString('default', { month: 'long' }), status: 'Paid', amount: Number(priceVal.replace(/[^0-9]/g, '')), date: new Date().toISOString().split('T')[0] }
+                                      ]);
+                                      setLinkingFrequency(12);
+                                      setLinkingCustomNotes(`Card Linked: ${assignedCode}. Assigned during admin verification.`);
+                                      setLinkingPaymentMode("Cash");
+                                      setLinkingPaymentStatus("Paid");
+                                      setLinkingError(null);
+                                      setLinkingSuccess(null);
+                                    }}
+                                    className="flex-1 py-1.5 px-3 bg-[#0b0c13] hover:bg-zinc-800 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all cursor-pointer text-center shadow-sm"
+                                  >
+                                    Approve & Plan
+                                  </button>
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        if (updatePhysicalMemberStatus) {
+                                          await updatePhysicalMemberStatus(req.userId, "rejected");
+                                        }
+                                      } catch (e) {
+                                        console.error("Failed rejection:", e);
+                                      }
+                                    }}
+                                    className="py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all cursor-pointer text-center"
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        ));
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {linkingRequestProfile && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0b0c13]/85 backdrop-blur-sm animate-fade-in" id="linkage-plan-modal">
+                <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden animate-slide-up">
+                  {/* Header */}
+                  <div className="bg-slate-50 border-b border-slate-100 p-6 flex justify-between items-center">
+                    <div>
+                      <h3 className="text-base font-extrabold text-[#0b0c13] uppercase tracking-tight">
+                        {linkingRequestProfile.isPhysicalMemberVerified ? "Update Membership Logistics" : "Assign Plan & Link Athlete"}
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-1 font-semibold">
+                        {linkingRequestProfile.isPhysicalMemberVerified ? `Updating details for ${linkingRequestProfile.physicalMemberName}` : `Linking profile of ${linkingRequestProfile.physicalMemberName || linkingRequestProfile.displayName || "Online Athlete"}`}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => setLinkingRequestProfile(null)}
+                      className="text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full transition-colors cursor-pointer"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  {/* Body Form */}
+                  <div className="p-6 space-y-4">
+                    <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-3 text-amber-900 text-xs shadow-sm">
+                      <span className="text-base select-none font-sans">💡</span>
+                      <div>
+                        <p className="font-extrabold uppercase tracking-wide text-amber-850 mb-0.5 text-[10px]">Membership Plan Required</p>
+                        <p className="leading-relaxed">
+                          Please choose and assign a membership plan for this athlete. Once a plan has been selected, the linkage will be synced, and they will be active in your registers.
+                        </p>
+                      </div>
+                    </div>
+
+                    {linkingError && (
+                      <div className="bg-rose-50 border border-rose-100 text-rose-700 p-3 rounded-xl text-xs font-semibold">
+                        ⚠️ {linkingError}
+                      </div>
+                    )}
+
+                    {linkingSuccess && (
+                      <div className="bg-emerald-50 border border-emerald-105 text-emerald-800 p-3 rounded-xl text-xs font-bold">
+                        {linkingSuccess}
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-[10px] font-mono tracking-widest uppercase text-slate-500 mb-1 font-bold">
+                        Gym Member Card ID (To Link) *
+                      </label>
+                      <input
+                        type="text"
+                        value={linkingCardId}
+                        onChange={(e) => setLinkingCardId(e.target.value.toUpperCase())}
+                        className="w-full bg-white border border-slate-200 px-3 py-2.5 rounded-xl text-xs font-mono text-slate-800 font-bold placeholder:text-slate-400 outline-none focus:ring-1 focus:ring-amber-500 transition-all"
+                        placeholder="e.g. BF-8153"
+                      />
+                    </div>
+
+                    {/* Choose Pricing Plan */}
+                    <div>
+                      <label className="block text-[10px] font-mono tracking-widest uppercase text-slate-500 mb-1 font-bold">
+                        Set Active Membership Plan / Class *
+                      </label>
+                      <select
+                        className="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl block p-3 outline-none focus:ring-1 focus:ring-amber-500 transition-all font-bold"
+                        value={linkingPlanId}
+                        onChange={(e) => {
+                          setLinkingPlanId(e.target.value);
+                          const chosen = plans.find(p => p.id === e.target.value);
+                          if (chosen) {
+                            setLinkingPrice(chosen.price);
+                          }
+                        }}
+                      >
+                        <option value="">-- Choose Plan --</option>
+                        {plans.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} ({p.price})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Overridable price & Custom sessions frequency */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-mono tracking-widest uppercase text-slate-500 mb-1 font-bold">
+                          Amount Payable
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl block p-3 outline-none focus:ring-1 focus:ring-amber-500 transition-all font-mono font-bold"
+                          value={linkingPrice}
+                          onChange={(e) => setLinkingPrice(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-mono tracking-widest uppercase text-slate-500 mb-1 font-bold">
+                          Pass Frequency (Sessions)
+                        </label>
+                        <select
+                          className="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl block p-3 outline-none focus:ring-1 focus:ring-amber-500 transition-all font-bold"
+                          value={linkingFrequency}
+                          onChange={(e) => setLinkingFrequency(Number(e.target.value))}
+                        >
+                          <option value="1">1 Session (Trial)</option>
+                          <option value="6">6 Sessions</option>
+                          <option value="12">12 Sessions (Monthly)</option>
+                          <option value="36">36 Sessions (Quarterly)</option>
+                          <option value="150">150 Sessions (Annual)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-mono tracking-widest uppercase text-slate-500 mb-1 font-bold">
+                          Paid Amount (₹)
+                        </label>
+                        <input
+                          type="number"
+                          className="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl block p-3 outline-none focus:ring-1 focus:ring-amber-500 transition-all font-mono font-bold"
+                          value={linkingPaidAmount}
+                          onChange={(e) => setLinkingPaidAmount(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-mono tracking-widest uppercase text-slate-500 mb-1 font-bold">
+                          Remaining Amount (₹)
+                        </label>
+                        <input
+                          type="number"
+                          className="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl block p-3 outline-none focus:ring-1 focus:ring-amber-500 transition-all font-mono font-bold"
+                          value={linkingRemainingAmount}
+                          onChange={(e) => setLinkingRemainingAmount(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-mono tracking-widest uppercase text-slate-500 mb-1 font-bold">
+                        Assigned Workout Plan
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl block p-3 outline-none focus:ring-1 focus:ring-amber-500 transition-all font-bold"
+                        value={linkingWorkoutPlan}
+                        onChange={(e) => setLinkingWorkoutPlan(e.target.value)}
+                        placeholder="e.g. Muscle Hypertrophy Level 1"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-mono tracking-widest uppercase text-slate-500 mb-1 font-bold">
+                          Plan Start Date
+                        </label>
+                        <input
+                          type="date"
+                          className="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl block p-3 outline-none focus:ring-1 focus:ring-amber-500 transition-all font-bold"
+                          value={linkingStartDate}
+                          onChange={(e) => setLinkingStartDate(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-mono tracking-widest uppercase text-slate-500 mb-1 font-bold">
+                          Plan End Date
+                        </label>
+                        <input
+                          type="date"
+                          className="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl block p-3 outline-none focus:ring-1 focus:ring-amber-500 transition-all font-bold"
+                          value={linkingEndDate}
+                          onChange={(e) => setLinkingEndDate(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Payment parameters */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-mono tracking-widest uppercase text-slate-500 mb-1 font-bold">
+                          Payment Method
+                        </label>
+                        <select
+                          className="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl block p-3 outline-none focus:ring-1 focus:ring-amber-500 transition-all font-bold"
+                          value={linkingPaymentMode}
+                          onChange={(e) => setLinkingPaymentMode(e.target.value)}
+                        >
+                          <option value="Cash">Cash Handover</option>
+                          <option value="UPI">UPI Digital Payment</option>
+                          <option value="Card">Credit / Debit Card</option>
+                          <option value="Bank">Direct Net Banking</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-mono tracking-widest uppercase text-slate-500 mb-1 font-bold">
+                          Payment Status
+                        </label>
+                        <select
+                          className="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl block p-3 outline-none focus:ring-1 focus:ring-amber-500 transition-all font-bold"
+                          value={linkingPaymentStatus}
+                          onChange={(e) => setLinkingPaymentStatus(e.target.value)}
+                        >
+                          <option value="Paid font-bold">🟢 Fully Paid</option>
+                          <option value="Pending font-bold">🔴 Pending Payment</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-mono tracking-widest uppercase text-slate-500 mb-1 font-bold">
+                        Staff Internal Log Notes
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl block p-3 outline-none focus:ring-1 focus:ring-amber-500 transition-all font-bold"
+                        placeholder="e.g. Added automatically during physical union sync"
+                        value={linkingCustomNotes}
+                        onChange={(e) => setLinkingCustomNotes(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Actions footer */}
+                  <div className="bg-slate-50 border-t border-slate-100 p-6 flex gap-3 justify-end">
+                    <button
+                      onClick={() => setLinkingRequestProfile(null)}
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-mono font-bold tracking-wider hover:bg-slate-100 transition-all cursor-pointer text-slate-700 bg-white"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!linkingPlanId) {
+                          setLinkingError("Please select an active Membership Class / Pricing Plan to proceed.");
+                          return;
+                        }
+                        const chosen = plans.find(p => p.id === linkingPlanId);
+                        const finalPlanName = chosen ? chosen.name : "Active Gym Pass";
+                        try {
+                          setLinkingError(null);
+                          setLinkingSuccess(null);
+
+                          // 1. Issue selected pass with target athlete id
+                          await addPass(
+                            linkingRequestProfile.physicalMemberName || linkingRequestProfile.displayName || "Offline Athlete",
+                            linkingPlanId,
+                            finalPlanName,
+                            linkingPrice || "₹0",
+                            linkingFrequency,
+                            linkingPaymentMode,
+                            linkingPaymentStatus,
+                            linkingCustomNotes,
+                            new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+                            linkingRequestProfile.userId
+                          );
+
+                          // 2. Validate/Approve physical verification status so they join the verified athlete logs
+                          if (updatePhysicalMemberStatus) {
+                            await updatePhysicalMemberStatus(
+                              linkingRequestProfile.userId, 
+                              "approved", 
+                              {
+                                cardId: linkingCardId,
+                                syncGoal: linkingRequestProfile.physicalMemberGoal || linkingRequestProfile.goal,
+                                paidAmount: Number(linkingPaidAmount),
+                                remainingAmount: Number(linkingRemainingAmount),
+                                workoutPlan: linkingWorkoutPlan,
+                                startDate: linkingStartDate,
+                                endDate: linkingEndDate,
+                                payments: linkingPayments
+                              }
+                            );
+                          }
+
+                          setLinkingSuccess(`Membership ${linkingRequestProfile.isPhysicalMemberVerified ? 'Updated' : 'Approved'} Successfully! Pass issued and synced.`);
+                          
+                          // Quick feedback then close modal
+                          setTimeout(() => {
+                            setLinkingSuccess(null);
+                            setLinkingRequestProfile(null);
+                          }, 1000);
+
+                        } catch (err: any) {
+                          setLinkingError(err?.message || "Failed to finalize membership configuration.");
+                        }
+                      }}
+                      className="px-5 py-2.5 rounded-xl bg-[#0b0c13] hover:bg-zinc-800 text-white text-xs font-mono font-bold tracking-wider uppercase transition-all cursor-pointer shadow-md select-none"
+                    >
+                      {linkingRequestProfile.isPhysicalMemberVerified ? "Update & Issue Pass" : "Assign Plan & Approve Linkage"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
           </div>
         )}
@@ -1356,15 +1982,63 @@ export default function AdminPanel() {
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                  <div>
+                  <div className="relative">
                     <label className="block text-[10px] font-mono tracking-widest uppercase text-slate-500 mb-1">Member Full Name</label>
-                    <input
-                      type="text"
-                      className="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl block p-3 outline-none focus:ring-1 focus:ring-indigo-500"
-                      placeholder="e.g. Suman Roy"
-                      value={paymentClientName}
-                      onChange={(e) => setPaymentClientName(e.target.value)}
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        className="w-full bg-white border border-slate-200 text-slate-800 text-xs rounded-xl block p-3 pr-10 outline-none focus:ring-1 focus:ring-indigo-500"
+                        placeholder="Search existing members..."
+                        value={memberSearchQuery || paymentClientName}
+                        onFocus={() => setShowMemberDropdown(true)}
+                        onChange={(e) => {
+                          setMemberSearchQuery(e.target.value);
+                          setPaymentClientName(e.target.value);
+                          setShowMemberDropdown(true);
+                        }}
+                      />
+                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                    </div>
+                    
+                    {showMemberDropdown && (
+                      <div className="absolute z-[110] left-0 right-0 mt-1 bg-white border border-slate-200 shadow-xl rounded-xl max-h-60 overflow-y-auto animate-fade-in py-1">
+                        {allUserProfiles
+                          .filter(p => {
+                            const name = (p.displayName || p.physicalMemberName || "").toLowerCase();
+                            const query = memberSearchQuery.toLowerCase();
+                            return name.includes(query) || (p.physicalMemberCardId || "").toLowerCase().includes(query);
+                          })
+                          .slice(0, 10)
+                          .map((p) => (
+                            <button
+                              key={p.userId}
+                              className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center justify-between group transition-colors border-b border-slate-50 last:border-0"
+                              onClick={() => {
+                                setPaymentClientName(p.displayName || p.physicalMemberName || `Athlete #${p.userId.substring(0, 5)}`);
+                                setMemberSearchQuery("");
+                                setShowMemberDropdown(false);
+                              }}
+                            >
+                              <div className="flex flex-col">
+                                <span className="text-xs font-bold text-slate-800">{p.displayName || p.physicalMemberName || "Athlete User"}</span>
+                                <span className="text-[10px] font-mono text-slate-400">Card ID: {p.physicalMemberCardId || "N/A"}</span>
+                              </div>
+                              <UserPlus size={14} className="text-slate-200 group-hover:text-indigo-500 transition-colors" />
+                            </button>
+                          ))}
+                        {allUserProfiles.length === 0 && (
+                          <div className="p-4 text-center text-slate-400 text-[10px] italic">No registered athletes found.</div>
+                        )}
+                        <div className="p-2 border-t border-slate-50 bg-slate-50/50">
+                          <button 
+                            onClick={() => setShowMemberDropdown(false)}
+                            className="w-full text-[10px] font-bold text-indigo-600 uppercase tracking-widest py-1 hover:text-indigo-700"
+                          >
+                            Close Selection
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -1947,20 +2621,76 @@ export default function AdminPanel() {
                       onChange={(e) => setNewWorkoutFocus(e.target.value)}
                     />
                   </div>
-                  <div>
+                  <div className="relative">
                     <label className="block text-[10px] uppercase font-mono tracking-widest text-slate-500 mb-1">Assign to Existing Member</label>
-                    <select
-                      className="w-full bg-white border border-slate-200 text-xs p-3 rounded-xl outline-none focus:ring-1 focus:ring-teal-500 text-slate-850"
-                      value={newWorkoutMember}
-                      onChange={(e) => setNewWorkoutMember(e.target.value)}
-                    >
-                      <option value="All Members">👥 All Active Members</option>
-                      {memberLogins.map((member) => (
-                        <option key={member.id || member.email} value={member.username || member.email}>
-                          👤 {member.username || member.name || "Unnamed"} ({member.email})
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        className="w-full bg-white border border-slate-200 text-xs p-3 pr-10 rounded-xl outline-none focus:ring-1 focus:ring-teal-500 text-slate-800"
+                        placeholder="Search athlete name..."
+                        value={workoutMemberSearch || newWorkoutMember}
+                        onFocus={() => setShowWorkoutMemberDropdown(true)}
+                        onChange={(e) => {
+                          setWorkoutMemberSearch(e.target.value);
+                          setNewWorkoutMember(e.target.value);
+                          setShowWorkoutMemberDropdown(true);
+                        }}
+                      />
+                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                    </div>
+
+                    {showWorkoutMemberDropdown && (
+                      <div className="absolute z-[110] left-0 right-0 mt-1 bg-white border border-slate-200 shadow-xl rounded-xl max-h-60 overflow-y-auto animate-fade-in py-1">
+                        <button
+                          className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center justify-between group transition-colors border-b border-slate-50"
+                          onClick={() => {
+                            setNewWorkoutMember("All Members");
+                            setWorkoutMemberSearch("");
+                            setShowWorkoutMemberDropdown(false);
+                          }}
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold text-slate-800">👥 All Active Members</span>
+                            <span className="text-[10px] font-mono text-slate-400 font-bold uppercase tracking-widest">Broadcast Channel</span>
+                          </div>
+                          <Users size={14} className="text-teal-500" />
+                        </button>
+
+                        {allUserProfiles
+                          .filter(p => {
+                            const name = (p.displayName || p.physicalMemberName || "").toLowerCase();
+                            const query = workoutMemberSearch.toLowerCase();
+                            return name.includes(query) || (p.userId || "").toLowerCase().includes(query);
+                          })
+                          .slice(0, 10)
+                          .map((p) => (
+                            <button
+                              key={p.userId}
+                              className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center justify-between group transition-colors border-b border-slate-50 last:border-0"
+                              onClick={() => {
+                                setNewWorkoutMember(p.displayName || p.physicalMemberName || `Athlete #${p.userId.substring(0, 5)}`);
+                                setWorkoutMemberSearch("");
+                                setShowWorkoutMemberDropdown(false);
+                              }}
+                            >
+                              <div className="flex flex-col">
+                                <span className="text-xs font-bold text-slate-800">{p.displayName || p.physicalMemberName || "Athlete User"}</span>
+                                <span className="text-[10px] font-mono text-slate-400">UID: {p.userId.substring(0, 8)}</span>
+                              </div>
+                              <User size={14} className="text-slate-200 group-hover:text-teal-500 transition-colors" />
+                            </button>
+                          ))}
+                        
+                        <div className="p-2 border-t border-slate-50 bg-slate-50/50">
+                          <button 
+                            onClick={() => setShowWorkoutMemberDropdown(false)}
+                            className="w-full text-[10px] font-bold text-teal-600 uppercase tracking-widest py-1 hover:text-teal-700"
+                          >
+                            Close Selection
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

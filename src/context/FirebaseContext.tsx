@@ -12,6 +12,7 @@ import {
   orderBy
 } from "firebase/firestore";
 import { auth, db, googleProvider, handleFirestoreError, OperationType } from "../firebase";
+import { PRICING_PLANS } from "../data";
 
 export interface UserProfile {
   userId: string;
@@ -21,6 +22,31 @@ export interface UserProfile {
   category: string;
   goal: string;
   updatedAt: any;
+  displayName?: string;
+  email?: string;
+  isPhysicalMemberVerified?: boolean;
+  physicalMemberCardId?: string;
+  physicalMemberName?: string;
+  physicalMemberPhone?: string;
+  physicalMemberLocation?: string;
+  physicalMemberGender?: string;
+  physicalMemberAge?: string;
+  physicalMemberJoinDate?: string;
+  physicalMemberAddress?: string;
+  physicalMemberPlan?: string;
+  physicalMemberGoal?: string;
+  physicalMemberHeight?: number;
+  physicalMemberWeight?: number;
+  physicalMemberBmi?: number;
+  physicalMemberPaidAmount?: number;
+  physicalMemberRemainingAmount?: number;
+  physicalMemberWorkoutPlan?: string;
+  physicalMemberPlanStartDate?: string;
+  physicalMemberPlanEndDate?: string;
+  physicalMemberPayments?: { month: string; status: string; amount: number; date: string }[];
+  physicalMemberVerifiedAt?: string;
+  physicalMemberRequestedAt?: string;
+  physicalMemberStatus?: "pending" | "approved" | "rejected" | "terminated" | "none";
 }
 
 export interface Booking {
@@ -97,6 +123,33 @@ interface FirebaseContextType {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   saveUserProfile: (weight: number, height: number, bmi: number, category: string, goal: string) => Promise<void>;
+  verifyPhysicalMembership: (
+    registeredName: string,
+    phone: string,
+    gender: string,
+    age: string,
+    joinDate: string,
+    address: string,
+    plan?: string,
+    goal?: string,
+    height?: number,
+    weight?: number,
+    bmi?: number
+  ) => Promise<void>;
+  updatePhysicalMemberStatus: (
+    targetUserId: string, 
+    status: "pending" | "approved" | "rejected" | "terminated", 
+    details?: {
+      cardId?: string;
+      syncGoal?: string;
+      paidAmount?: number;
+      remainingAmount?: number;
+      workoutPlan?: string;
+      startDate?: string;
+      endDate?: string;
+      payments?: any[];
+    }
+  ) => Promise<void>;
   addBooking: (
     classId: string,
     classTitle: string,
@@ -115,7 +168,8 @@ interface FirebaseContextType {
     mode?: string,
     status?: string,
     notes?: string,
-    paymentDate?: string
+    paymentDate?: string,
+    targetUserId?: string
   ) => Promise<void>;
   sendChatMessage: (text: string, sender: "user" | "bot") => Promise<void>;
   updatePlan: (plan: PricingPlan) => Promise<void>;
@@ -135,6 +189,7 @@ interface FirebaseContextType {
   editMemberLogin: (username: string, updates: Partial<MemberLogin>) => Promise<void>;
   deleteMemberLogin: (username: string) => Promise<void>;
   deletePass: (passId: string) => Promise<void>;
+  deleteUserProfile: (targetUserId: string) => Promise<void>;
 }
 
 const FirebaseContext = createContext<FirebaseContextType | undefined>(undefined);
@@ -178,8 +233,34 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       (querySnap) => {
         const tempPlans: PricingPlan[] = [];
         querySnap.forEach((docSnap) => {
-          tempPlans.push(docSnap.data() as PricingPlan);
+          tempPlans.push({ id: docSnap.id, ...docSnap.data() } as PricingPlan);
         });
+
+        // If plans are empty and the logged-in user is an admin, seed the factory presets to database
+        const currentUser = auth.currentUser;
+        const isAdminUser = currentUser && (
+          (currentUser.email || "").toLowerCase() === "gymadmin@gmail.com"
+        );
+
+        if (tempPlans.length === 0 && isAdminUser) {
+          PRICING_PLANS.forEach(async (preset, idx) => {
+            const planToSave = {
+              id: preset.id,
+              name: preset.name,
+              price: preset.price,
+              period: (preset.period || "month").toLowerCase(),
+              isPopular: preset.popular || (preset as any).isPopular || false,
+              features: preset.features,
+              order: idx
+            };
+            try {
+              await setDoc(doc(db, "plans", preset.id), planToSave);
+            } catch (err) {
+              console.error("Failed to seed preset plan:", preset.id, err);
+            }
+          });
+        }
+
         // Sort in memory to avoid index requirements or missing order field issues
         tempPlans.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         setPlans(tempPlans);
@@ -201,7 +282,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       doc(db, "user_profiles", user.uid),
       (docSnap) => {
         if (docSnap.exists()) {
-          setUserProfile(docSnap.data() as UserProfile);
+          setUserProfile({ userId: docSnap.id, ...docSnap.data() } as UserProfile);
         } else {
           setUserProfile(null);
         }
@@ -220,7 +301,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
 
     const collectionPath = "bookings";
     const userEmail = (user.email || "").toLowerCase();
-    const q = (userEmail === "gymadmin@gmail.com" || userEmail === "itssabujjr@gmail.com")
+    const adminEmails = ["gymadmin@gmail.com", "itssabujjr@gmail.com"];
+    const q = adminEmails.includes(userEmail)
       ? query(collection(db, collectionPath))
       : query(collection(db, collectionPath), where("userId", "==", user.uid));
     
@@ -247,7 +329,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
 
     const collectionPath = "passes";
     const userEmail = (user.email || "").toLowerCase();
-    const q = (userEmail === "gymadmin@gmail.com" || userEmail === "itssabujjr@gmail.com")
+    const adminEmails = ["gymadmin@gmail.com", "itssabujjr@gmail.com"];
+    const q = adminEmails.includes(userEmail)
       ? query(collection(db, collectionPath))
       : query(collection(db, collectionPath), where("userId", "==", user.uid));
 
@@ -275,7 +358,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       return;
     }
     const safeEmail = (user.email || "").toLowerCase();
-    if (safeEmail !== "gymadmin@gmail.com" && safeEmail !== "itssabujjr@gmail.com") {
+    const adminEmails = ["gymadmin@gmail.com", "itssabujjr@gmail.com"];
+    if (!adminEmails.includes(safeEmail)) {
       setAllUserProfiles([]);
       return;
     }
@@ -288,7 +372,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       (querySnap) => {
         const tempProfiles: UserProfile[] = [];
         querySnap.forEach((docSnap) => {
-          tempProfiles.push(docSnap.data() as UserProfile);
+          tempProfiles.push({ userId: docSnap.id, ...docSnap.data() } as UserProfile);
         });
         setAllUserProfiles(tempProfiles);
       },
@@ -303,6 +387,12 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   // 4c. Sync custom member logins for Admin
   useEffect(() => {
     if (!user) {
+      setMemberLogins([]);
+      return;
+    }
+    const safeEmail = (user.email || "").toLowerCase();
+    const adminEmails = ["gymadmin@gmail.com", "itssabujjr@gmail.com"];
+    if (!adminEmails.includes(safeEmail)) {
       setMemberLogins([]);
       return;
     }
@@ -431,7 +521,87 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         category,
         goal,
         updatedAt: new Date() // Firebase rules support comparing date instances / request.time
-      });
+      }, { merge: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
+    }
+  };
+
+  // Verify physical offline membership at the gym by requesting linkage
+  const verifyPhysicalMembership = async (
+    registeredName: string,
+    phone: string,
+    gender: string,
+    age: string,
+    joinDate: string,
+    address: string,
+    plan?: string,
+    goal?: string,
+    height?: number,
+    weight?: number,
+    bmi?: number
+  ) => {
+    if (!user) return;
+    const path = `user_profiles/${user.uid}`;
+    try {
+      const docRef = doc(db, "user_profiles", user.uid);
+      await setDoc(docRef, {
+        userId: user.uid,
+        displayName: user.displayName || user.email?.split("@")[0] || "Athlete",
+        email: user.email || "",
+        isPhysicalMemberVerified: false,
+        physicalMemberStatus: "pending",
+        physicalMemberName: registeredName,
+        physicalMemberPhone: phone,
+        physicalMemberGender: gender,
+        physicalMemberAge: age,
+        physicalMemberJoinDate: joinDate,
+        physicalMemberAddress: address,
+        physicalMemberPlan: plan || "",
+        physicalMemberGoal: goal || "",
+        physicalMemberHeight: height || 0,
+        physicalMemberWeight: weight || 0,
+        physicalMemberBmi: bmi || 0,
+        physicalMemberRequestedAt: new Date().toISOString(),
+      }, { merge: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
+    }
+  };
+
+  // Update physical offline membership status by Admin
+  const updatePhysicalMemberStatus = async (
+    targetUserId: string, 
+    status: "pending" | "approved" | "rejected" | "terminated", 
+    details?: {
+      cardId?: string;
+      syncGoal?: string;
+      paidAmount?: number;
+      remainingAmount?: number;
+      workoutPlan?: string;
+      startDate?: string;
+      endDate?: string;
+      payments?: any[];
+    }
+  ) => {
+    const path = `user_profiles/${targetUserId}`;
+    try {
+      const docRef = doc(db, "user_profiles", targetUserId);
+      await setDoc(docRef, {
+        physicalMemberStatus: status,
+        isPhysicalMemberVerified: status === "approved",
+        physicalMemberCardId: details?.cardId || null,
+        goal: details?.syncGoal || null,
+        physicalMemberPaidAmount: details?.paidAmount !== undefined ? details.paidAmount : 0,
+        physicalMemberRemainingAmount: details?.remainingAmount !== undefined ? details.remainingAmount : 0,
+        physicalMemberWorkoutPlan: details?.workoutPlan || "",
+        physicalMemberPlanStartDate: details?.startDate || "",
+        physicalMemberPlanEndDate: details?.endDate || "",
+        physicalMemberPayments: details?.payments || [],
+        physicalMemberVerifiedAt: status === "approved" ? new Date().toISOString() : null,
+      }, { merge: true });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
       throw error;
@@ -491,7 +661,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     mode?: string,
     status?: string,
     notes?: string,
-    paymentDate?: string
+    paymentDate?: string,
+    targetUserId?: string
   ) => {
     if (!user) return;
     const passId = `ps_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
@@ -500,7 +671,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       const docRef = doc(db, "passes", passId);
       await setDoc(docRef, {
         passId,
-        userId: user.uid,
+        userId: targetUserId || user.uid,
         clientName,
         planId,
         planName,
@@ -642,6 +813,24 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const deleteUserProfile = async (targetUserId: string) => {
+    if (!user) throw new Error("You do not have permission.");
+    const path = `user_profiles/${targetUserId}`;
+    try {
+      const docRef = doc(db, "user_profiles", targetUserId);
+      await setDoc(docRef, {
+        isPhysicalMemberVerified: false,
+        physicalMemberStatus: "terminated",
+        physicalMemberCardId: null,
+        physicalMemberVerifiedAt: null,
+        // We keep the requested info for history but toggle verified off
+      }, { merge: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
+    }
+  };
+
   return (
     <FirebaseContext.Provider
       value={{
@@ -660,6 +849,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         signInWithEmail,
         logout,
         saveUserProfile,
+        verifyPhysicalMembership,
+        updatePhysicalMemberStatus,
         addBooking,
         cancelBooking,
         addPass,
@@ -669,7 +860,8 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         addMemberLogin,
         editMemberLogin,
         deleteMemberLogin,
-        deletePass
+        deletePass,
+        deleteUserProfile
       }}
     >
       {children}

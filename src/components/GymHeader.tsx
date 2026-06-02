@@ -8,9 +8,11 @@ interface GymHeaderProps {
   onOpenAuth: () => void;
   isProfileOpen?: boolean;
   onOpenProfile?: () => void;
+  onOpenLinkingForm?: () => void;
+  userProfile?: any; // To check if they need the link button
 }
 
-export default function GymHeader({ logoUrl, onOpenAuth, isProfileOpen, onOpenProfile }: GymHeaderProps) {
+export default function GymHeader({ logoUrl, onOpenAuth, isProfileOpen, onOpenProfile, onOpenLinkingForm, userProfile }: GymHeaderProps) {
   const { user, logout } = useFirebase();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -76,15 +78,27 @@ export default function GymHeader({ logoUrl, onOpenAuth, isProfileOpen, onOpenPr
         <div className="flex items-center gap-1.5 sm:gap-4">
           {/* User Sign-In Indicator */}
           {user ? (
-            <div className="flex items-center gap-2 group relative">
+            <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 group relative">
               <img
                 src={user.photoURL || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=64"}
                 alt={user.displayName || "Member"}
-                className={`h-8.5 w-8.5 rounded-full border ${isProfileOpen ? "border-amber-500" : "border-amber-500/50"} object-cover cursor-pointer hover:border-amber-400 transition-colors`}
+                className={`h-9 w-9 rounded-full border ${isProfileOpen ? "border-amber-500" : "border-amber-500/50"} object-cover cursor-pointer hover:border-amber-400 transition-colors`}
                 referrerPolicy="no-referrer"
                 title={user.displayName || "Google Member"}
                 onClick={onOpenProfile}
               />
+              {userProfile && !userProfile.isPhysicalMemberVerified && userProfile.physicalMemberStatus !== "pending" && (
+                <button
+                  onClick={() => {
+                    if (onOpenLinkingForm) {
+                      onOpenLinkingForm();
+                    }
+                  }}
+                  className="whitespace-nowrap text-[9px] sm:text-[10px] font-sans font-extrabold uppercase tracking-widest text-amber-500 hover:text-amber-400 py-0.5 sm:py-1 px-1 sm:px-2 bg-zinc-900/80 border border-amber-500/20 rounded transition-colors"
+                >
+                  I'm already a member
+                </button>
+              )}
               <button
                 onClick={logout}
                 className="hidden sm:flex items-center gap-1.5 text-[10px] hover:text-red-400 border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 rounded-md uppercase tracking-wider font-mono transition-colors"

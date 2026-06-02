@@ -292,25 +292,8 @@ export default function BMICalculator({ onBmiUpdate, setCurrentTab }: BMICalcula
           {/* Action trigger button */}
           <div className="pt-4 flex flex-col sm:flex-row gap-3">
             <button
-              onClick={handleSaveData}
-              className="flex-1 py-4.5 bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 hover:border-amber-500 text-zinc-100 font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-              id="btn-save-bmi"
-            >
-              {saved ? (
-                <>
-                  <Check size={16} className="text-emerald-500 animate-bounce" />
-                  <span className="text-emerald-400">Metrics Tied Successfully!</span>
-                </>
-              ) : (
-                <>
-                  <RefreshCw size={16} className="text-amber-500" />
-                  <span>Update & Lock-in Body Metrics</span>
-                </>
-              )}
-            </button>
-            <button
-              onClick={() => setCurrentTab("planner")}
-              className="px-6 py-4.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-extrabold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all"
+              onClick={() => setCurrentTab("chat")}
+              className="flex-1 py-4.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-extrabold rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all"
               id="btn-goto-ai-bmi"
             >
               Consult AI Coach

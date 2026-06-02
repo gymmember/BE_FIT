@@ -69,6 +69,6 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     path
   };
   
-  console.warn("Firestore access warning (frequently happens during transient auth state shifts): ", JSON.stringify(errInfo));
-  // We should not throw an error here because it crashes the React app on transient credential changes or snapshot listeners.
+  console.error("Firestore Error: ", JSON.stringify(errInfo));
+  // We do not throw to avoid crashing the React application on transient permission warnings during login/logout changes
 }
