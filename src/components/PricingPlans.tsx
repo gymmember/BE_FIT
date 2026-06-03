@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Check } from "lucide-react";
 import { useFirebase } from "../context/FirebaseContext";
+import JoinRequestModal from "./JoinRequestModal";
 
 const HARDCODED_PLANS = [
   {
@@ -28,13 +29,36 @@ const HARDCODED_PLANS = [
   }
 ];
 
-export function PricingPlans() {
-  const { plans } = useFirebase();
+interface PricingPlansProps {
+  onOpenAuth?: () => void;
+}
+
+export function PricingPlans({ onOpenAuth }: PricingPlansProps) {
+  const { plans, user } = useFirebase();
+  const [isJoinRequestModalOpen, setIsJoinRequestModalOpen] = useState(false);
+  const [selectedPlanName, setSelectedPlanName] = useState("");
 
   const displayPlans = plans.length > 0 ? plans : HARDCODED_PLANS;
 
+  const handleSelectPlan = (planName: string) => {
+    if (!user) {
+      alert("Please login to select a plan!");
+      if (onOpenAuth) {
+        onOpenAuth();
+      }
+    } else {
+      setSelectedPlanName(planName);
+      setIsJoinRequestModalOpen(true);
+    }
+  };
+
   return (
     <div className="w-full max-w-6xl mx-auto px-4 py-16 sm:py-24 relative z-10" id="pricing-plans-section">
+      <JoinRequestModal 
+        isOpen={isJoinRequestModalOpen} 
+        onClose={() => setIsJoinRequestModalOpen(false)} 
+        planName={selectedPlanName} 
+      />
       <div className="text-center mb-16 space-y-4">
         <h2 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white drop-shadow-lg">
           Our Pass Plans
@@ -78,6 +102,7 @@ export function PricingPlans() {
             </ul>
 
             <button 
+              onClick={() => handleSelectPlan(plan.name)}
               className={`w-full py-3 px-6 rounded-xl font-bold text-sm uppercase tracking-wider transition-all ${
                 plan.isPopular
                   ? "bg-amber-500 text-zinc-950 hover:bg-amber-400"

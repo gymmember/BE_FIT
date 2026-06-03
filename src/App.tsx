@@ -201,7 +201,7 @@ export default function App() {
                 <WelcomeSection />
 
                 {/* Pricing Plans Section */}
-                <PricingPlans />
+                <PricingPlans onOpenAuth={() => setIsAuthModalOpen(true)} />
 
                 {/* Gallery Section */}
                 <GallerySection />
@@ -644,7 +644,7 @@ export default function App() {
                     </div>
 
                     <div className="flex-1 flex flex-col items-center justify-center pb-16 pt-8">
-                      <PricingPlans />
+                      <PricingPlans onOpenAuth={() => setIsAuthModalOpen(true)} />
                       <GallerySection />
                       <AchievementsSection />
                       <CalorieCalculator />

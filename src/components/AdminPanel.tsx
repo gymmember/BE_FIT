@@ -58,7 +58,8 @@ export default function AdminPanel() {
     cancelBooking,
     globalError,
     updatePhysicalMemberStatus,
-    deleteUserProfile
+    deleteUserProfile,
+    joinRequests
   } = useFirebase();
 
   // Active activeTab switcher state
@@ -288,6 +289,7 @@ export default function AdminPanel() {
     { id: "payments", label: "Payments", icon: CreditCard },
     { id: "equipment", label: "Equipment", icon: Wrench },
     { id: "enquiries", label: "Enquiries", icon: HelpCircle },
+    { id: "join", label: "Join Requests", icon: UserPlus },
     { id: "workout", label: "Workout Plans", icon: Dumbbell }
   ];
 
@@ -853,6 +855,11 @@ export default function AdminPanel() {
                   id: "requests", 
                   label: `Linkage Requests (${allUserProfiles.filter(p => p.physicalMemberStatus === "pending").length})`,
                   highlight: allUserProfiles.filter(p => p.physicalMemberStatus === "pending").length > 0 
+                },
+                { 
+                  id: "join", 
+                  label: `Join Requests (${joinRequests.length})`,
+                  highlight: joinRequests.length > 0 
                 },
               ].map((sub) => (
                 <button

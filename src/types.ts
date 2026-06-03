@@ -1,3 +1,15 @@
+export interface JoinRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  mobile: string;
+  gmail: string;
+  age: string;
+  planName: string;
+  createdAt: any;
+  status: "pending" | "contacted";
+}
+
 export interface Trainer {
   name: string;
   role: string;

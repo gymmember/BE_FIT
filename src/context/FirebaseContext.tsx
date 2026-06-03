@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, onAuthStateChanged, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { JoinRequest } from "../types";
 import {
   collection,
   doc,
@@ -117,6 +118,7 @@ interface FirebaseContextType {
   allUserProfiles: UserProfile[];
   plans: PricingPlan[];
   memberLogins: MemberLogin[];
+  joinRequests: JoinRequest[];
   globalError: string | null;
   loginWithGoogle: () => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
@@ -188,6 +190,13 @@ interface FirebaseContextType {
   ) => Promise<void>;
   editMemberLogin: (username: string, updates: Partial<MemberLogin>) => Promise<void>;
   deleteMemberLogin: (username: string) => Promise<void>;
+  submitJoinRequest: (
+    userName: string,
+    mobile: string,
+    gmail: string,
+    age: string,
+    planName: string
+  ) => Promise<void>;
   deletePass: (passId: string) => Promise<void>;
   deleteUserProfile: (targetUserId: string) => Promise<void>;
 }
@@ -204,6 +213,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const [allUserProfiles, setAllUserProfiles] = useState<UserProfile[]>([]);
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [memberLogins, setMemberLogins] = useState<MemberLogin[]>([]);
+  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
   // 1. Auth Listener
@@ -424,6 +434,37 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
       }
     );
 
+    return () => unsubscribe();
+  }, [user]);
+
+  // 5b. Join Requests (Admin Only)
+  useEffect(() => {
+    if (!user) {
+      setJoinRequests([]);
+      return;
+    }
+    const safeEmail = (user.email || "").toLowerCase();
+    const adminEmails = ["gymadmin@gmail.com", "itssabujjr@gmail.com"];
+    if (!adminEmails.includes(safeEmail)) {
+      setJoinRequests([]);
+      return;
+    }
+
+    const collectionPath = "join_requests";
+    const q = query(collection(db, collectionPath), orderBy("createdAt", "desc"));
+    const unsubscribe = onSnapshot(
+      q,
+      (querySnap) => {
+        const temp: JoinRequest[] = [];
+        querySnap.forEach((docSnap) => {
+          temp.push({ id: docSnap.id, ...docSnap.data() } as JoinRequest);
+        });
+        setJoinRequests(temp);
+      },
+      (error: any) => {
+        handleFirestoreError(error, OperationType.GET, collectionPath);
+      }
+    );
     return () => unsubscribe();
   }, [user]);
 
@@ -813,6 +854,33 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const submitJoinRequest = async (
+    userName: string,
+    mobile: string,
+    gmail: string,
+    age: string,
+    planName: string
+  ) => {
+    if (!user) throw new Error("Must be logged in.");
+    const requestId = `jr_${Date.now()}`;
+    const path = `join_requests/${requestId}`;
+    try {
+      await setDoc(doc(db, "join_requests", requestId), {
+        userId: user.uid,
+        userName,
+        mobile,
+        gmail,
+        age,
+        planName,
+        createdAt: new Date(),
+        status: "pending"
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
+    }
+  };
+
   const deleteUserProfile = async (targetUserId: string) => {
     if (!user) throw new Error("You do not have permission.");
     const path = `user_profiles/${targetUserId}`;
@@ -843,6 +911,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         allUserProfiles,
         plans,
         memberLogins,
+        joinRequests,
         globalError,
         loginWithGoogle,
         signUpWithEmail,
@@ -860,6 +929,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         addMemberLogin,
         editMemberLogin,
         deleteMemberLogin,
+        submitJoinRequest,
         deletePass,
         deleteUserProfile
       }}
