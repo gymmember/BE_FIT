@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Dumbbell } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import bodybuilderHeroImg from "../assets/images/bodybuilder_back_flex_hero_1780440850438.png";
 
 export function Opening3DEffect() {
   const [progress, setProgress] = useState<number>(0);
@@ -90,7 +91,7 @@ export function Opening3DEffect() {
           {/* Glass Card for Image */}
           <div className="relative w-full h-full rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-900/50 shadow-2xl flex items-center justify-center group">
             <img 
-              src="/src/assets/images/bodybuilder_back_flex_hero_1780440850438.png"
+              src={bodybuilderHeroImg}
               alt="Bodybuilder Back Flex"
               className="w-full h-full object-cover grayscale-[0.2] hover:grayscale-0 transition-all duration-700"
             />

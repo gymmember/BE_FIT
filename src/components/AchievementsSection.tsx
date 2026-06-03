@@ -2,13 +2,20 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronLeft, ChevronRight, Zap } from "lucide-react";
 
+import t1b from "../assets/images/transformation_1_before_1780441179293.png";
+import t1a from "../assets/images/transformation_1_after_1780441191291.png";
+import t2b from "../assets/images/transformation_2_before_1780441205362.png";
+import t2a from "../assets/images/transformation_2_after_1780441221293.png";
+import t3b from "../assets/images/transformation_3_before_1780441236308.png";
+import t3a from "../assets/images/transformation_3_after_1780441248314.png";
+
 const transformations = [
   {
     id: 1,
     title: "Weight Loss Mastery",
     subtitle: "From a struggle to a shredded reality.",
-    before: "/src/assets/images/transformation_1_before_1780441179293.png",
-    after: "/src/assets/images/transformation_1_after_1780441191291.png",
+    before: t1b,
+    after: t1a,
     duration: "6 Months",
     stat: "-22kg Lost"
   },
@@ -16,8 +23,8 @@ const transformations = [
     id: 2,
     title: "Muscle Evolution",
     subtitle: "Transforming frame into steel.",
-    before: "/src/assets/images/transformation_2_before_1780441205362.png",
-    after: "/src/assets/images/transformation_2_after_1780441221293.png",
+    before: t2b,
+    after: t2a,
     duration: "12 Months",
     stat: "+15kg Lean Mass"
   },
@@ -25,8 +32,8 @@ const transformations = [
     id: 3,
     title: "Athletic Definition",
     subtitle: "Carving excellence through consistency.",
-    before: "/src/assets/images/transformation_3_before_1780441236308.png",
-    after: "/src/assets/images/transformation_3_after_1780441248314.png",
+    before: t3b,
+    after: t3a,
     duration: "4 Months",
     stat: "Elite Toning"
   }
