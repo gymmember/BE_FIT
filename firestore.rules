@@ -51,9 +51,9 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
-    match /enquiries/{document=**} {
-      allow read: if true;
-      allow write: if isAdmin();
+    match /enquiries/{enquiryId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if true;
     }
     
     match /join_requests/{requestId} {

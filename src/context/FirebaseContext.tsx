@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User, onAuthStateChanged, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { JoinRequest } from "../types";
+import { JoinRequest, Enquiry } from "../types";
 import {
   collection,
   doc,
@@ -205,6 +205,10 @@ interface FirebaseContextType {
   ) => Promise<void>;
   deletePass: (passId: string) => Promise<void>;
   deleteUserProfile: (targetUserId: string) => Promise<void>;
+  enquiries: Enquiry[];
+  addEnquiry: (name: string, email: string, phone: string, queryText: string) => Promise<void>;
+  markEnquirySeen: (enquiryId: string) => Promise<void>;
+  deleteEnquiry: (enquiryId: string) => Promise<void>;
 }
 
 const FirebaseContext = createContext<FirebaseContextType | undefined>(undefined);
@@ -220,6 +224,7 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [memberLogins, setMemberLogins] = useState<MemberLogin[]>([]);
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
   // 1. Auth Listener
@@ -466,6 +471,37 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
           temp.push({ id: docSnap.id, ...docSnap.data() } as JoinRequest);
         });
         setJoinRequests(temp);
+      },
+      (error: any) => {
+        handleFirestoreError(error, OperationType.GET, collectionPath);
+      }
+    );
+    return () => unsubscribe();
+  }, [user]);
+
+  // 5b-enquiry. Enquiries (Admin Only)
+  useEffect(() => {
+    if (!user) {
+      setEnquiries([]);
+      return;
+    }
+    const safeEmail = (user.email || "").toLowerCase();
+    const adminEmails = ["gymadmin@gmail.com", "itssabujjr@gmail.com"];
+    if (!adminEmails.includes(safeEmail)) {
+      setEnquiries([]);
+      return;
+    }
+
+    const collectionPath = "enquiries";
+    const q = query(collection(db, collectionPath), orderBy("createdAt", "desc"));
+    const unsubscribe = onSnapshot(
+      q,
+      (querySnap) => {
+        const temp: Enquiry[] = [];
+        querySnap.forEach((docSnap) => {
+          temp.push({ id: docSnap.id, ...docSnap.data() } as Enquiry);
+        });
+        setEnquiries(temp);
       },
       (error: any) => {
         handleFirestoreError(error, OperationType.GET, collectionPath);
@@ -899,6 +935,53 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const addEnquiry = async (
+    name: string,
+    email: string,
+    phone: string,
+    queryText: string
+  ) => {
+    const id = `enq_${Date.now()}`;
+    const path = `enquiries/${id}`;
+    try {
+      await setDoc(doc(db, "enquiries", id), {
+        id,
+        name,
+        email: email || "N/A",
+        phone,
+        query: queryText,
+        date: new Date().toISOString().split('T')[0],
+        seen: false,
+        createdAt: new Date()
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
+    }
+  };
+
+  const markEnquirySeen = async (enquiryId: string) => {
+    const path = `enquiries/${enquiryId}`;
+    try {
+      await setDoc(doc(db, "enquiries", enquiryId), {
+        seen: true
+      }, { merge: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+      throw error;
+    }
+  };
+
+  const deleteEnquiry = async (enquiryId: string) => {
+    const path = `enquiries/${enquiryId}`;
+    try {
+      await deleteDoc(doc(db, "enquiries", enquiryId));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, path);
+      throw error;
+    }
+  };
+
   const deleteUserProfile = async (targetUserId: string) => {
     if (!user) throw new Error("You do not have permission.");
     const path = `user_profiles/${targetUserId}`;
@@ -949,7 +1032,11 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         deleteMemberLogin,
         submitJoinRequest,
         deletePass,
-        deleteUserProfile
+        deleteUserProfile,
+        enquiries,
+        addEnquiry,
+        markEnquirySeen,
+        deleteEnquiry
       }}
     >
       {children}

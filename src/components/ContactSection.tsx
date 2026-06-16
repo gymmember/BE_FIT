@@ -1,45 +1,46 @@
 import React, { useState } from "react";
 import { MapPin, Phone, Mail, Facebook, Instagram, CheckCircle2 } from "lucide-react";
+import { useFirebase } from "../context/FirebaseContext";
 
 export function ContactSection() {
+  const { addEnquiry } = useFirebase();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !phone.trim() || !message.trim()) return;
 
-    // Get current enquiries
-    const saved = localStorage.getItem("enquiries");
-    const existing = saved ? JSON.parse(saved) : [];
+    try {
+      setSubmitting(true);
+      setErrorMsg(null);
+      await addEnquiry(
+        name.trim(),
+        email.trim() || "N/A",
+        phone.trim(),
+        message.trim()
+      );
 
-    const newEnquiry = {
-      name: name.trim(),
-      email: email.trim() || "N/A",
-      phone: phone.trim(),
-      query: message.trim(),
-      date: new Date().toISOString().split('T')[0],
-      seen: false
-    };
+      setSubmitted(true);
+      setName("");
+      setEmail("");
+      setPhone("");
+      setMessage("");
 
-    const updated = [newEnquiry, ...existing];
-    localStorage.setItem("enquiries", JSON.stringify(updated));
-
-    // Dynamic signal to AdminPanel
-    window.dispatchEvent(new Event("enquiriesUpdated"));
-
-    setSubmitted(true);
-    setName("");
-    setEmail("");
-    setPhone("");
-    setMessage("");
-
-    setTimeout(() => {
-      setSubmitted(false);
-    }, 4500);
+      setTimeout(() => {
+        setSubmitted(false);
+      }, 4500);
+    } catch (err: any) {
+      console.error("Enquiry submission failed:", err);
+      setErrorMsg(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
   return (
     <div className="w-full max-w-6xl mx-auto px-4 py-16 sm:py-24 relative z-10" id="contact-section">
@@ -162,11 +163,17 @@ export function ContactSection() {
                   required
                 ></textarea>
               </div>
+              {errorMsg && (
+                <div className="bg-rose-950/20 border border-rose-500/30 p-3 rounded-lg text-rose-400 text-xs font-semibold">
+                  {errorMsg}
+                </div>
+              )}
               <button 
                 type="submit"
-                className="w-full bg-[#ff4a11] hover:bg-[#ff5a22] text-white font-bold py-4 px-6 rounded-lg transition-colors focus:outline-none uppercase tracking-wide text-sm mt-2"
+                disabled={submitting}
+                className="w-full bg-[#ff4a11] hover:bg-[#ff5a22] disabled:bg-zinc-700 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-lg transition-colors focus:outline-none uppercase tracking-wide text-sm mt-2"
               >
-                Send Message
+                {submitting ? "Sending Message..." : "Send Message"}
               </button>
             </form>
           )}

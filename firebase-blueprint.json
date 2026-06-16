@@ -214,6 +214,47 @@
         }
       },
       "required": ["userId", "userName", "mobile", "gmail", "age", "gender", "address", "fitnessGoal", "height", "weight", "bmi", "planName", "createdAt", "status"]
+    },
+    "Enquiry": {
+      "title": "Enquiry",
+      "description": "General customer query and help-desk questions submitted from Contact Us",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique inquiry serial identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name of inquirer"
+        },
+        "email": {
+          "type": "string",
+          "description": "Inquirer email address"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Contact phone number"
+        },
+        "query": {
+          "type": "string",
+          "description": "Message query details body text"
+        },
+        "date": {
+          "type": "string",
+          "description": "Short date stamp in string format"
+        },
+        "seen": {
+          "type": "boolean",
+          "description": "Read status toggle"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["id", "name", "email", "phone", "query", "date", "seen", "createdAt"]
     }
   },
   "firestore": {
@@ -236,6 +277,10 @@
     "/join_requests/{requestId}": {
       "schema": "JoinRequest",
       "description": "Submitted student registration and health enrollment forms"
+    },
+    "/enquiries/{enquiryId}": {
+      "schema": "Enquiry",
+      "description": "Direct enquiries filled out by visitors needing staff guidance"
     }
   }
 }

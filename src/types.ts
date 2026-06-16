@@ -16,6 +16,17 @@ export interface JoinRequest {
   status: "pending" | "contacted";
 }
 
+export interface Enquiry {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  query: string;
+  date: string;
+  seen: boolean;
+  createdAt: any;
+}
+
 export interface Trainer {
   name: string;
   role: string;

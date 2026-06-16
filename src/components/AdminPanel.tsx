@@ -59,7 +59,10 @@ export default function AdminPanel() {
     globalError,
     updatePhysicalMemberStatus,
     deleteUserProfile,
-    joinRequests
+    joinRequests,
+    enquiries = [],
+    markEnquirySeen,
+    deleteEnquiry
   } = useFirebase();
 
   // Active activeTab switcher state
@@ -209,19 +212,6 @@ export default function AdminPanel() {
     }
   };
 
-  // States for Enquiries lead board
-  const [enquiries, setEnquiries] = useState<any[]>(() => {
-    const saved = localStorage.getItem("enquiries");
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [editingEnquiryIndex, setEditingEnquiryIndex] = useState<number | null>(null);
-  const [enquiryName, setEnquiryName] = useState("");
-  const [enquiryPhone, setEnquiryPhone] = useState("");
-  const [enquiryEmail, setEnquiryEmail] = useState("");
-  const [enquiryQuery, setEnquiryQuery] = useState("");
-  const [enquiryDate, setEnquiryDate] = useState("");
-  const [showEnquiryForm, setShowEnquiryForm] = useState(false);
-
   // States for Workout Builder
   const [workoutPlans, setWorkoutPlans] = useState<any[]>(() => {
     const saved = localStorage.getItem("workoutPlans");
@@ -249,32 +239,6 @@ export default function AdminPanel() {
   React.useEffect(() => {
     localStorage.setItem("equipmentList", JSON.stringify(equipmentList));
   }, [equipmentList]);
-
-  React.useEffect(() => {
-    localStorage.setItem("enquiries", JSON.stringify(enquiries));
-  }, [enquiries]);
-
-  React.useEffect(() => {
-    const handleUpdate = () => {
-      const saved = localStorage.getItem("enquiries");
-      if (saved) {
-        setEnquiries(JSON.parse(saved));
-      }
-    };
-    window.addEventListener("enquiriesUpdated", handleUpdate);
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "enquiries" && e.newValue) {
-        setEnquiries(JSON.parse(e.newValue));
-      }
-    };
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("enquiriesUpdated", handleUpdate);
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
 
   React.useEffect(() => {
     localStorage.setItem("workoutPlans", JSON.stringify(workoutPlans));
@@ -2546,22 +2510,14 @@ export default function AdminPanel() {
                     <div className="flex items-center gap-2">
                       {!en.seen && (
                         <button
-                          onClick={() => {
-                            const updated = [...enquiries];
-                            updated[index] = { ...enquiries[index], seen: true };
-                            setEnquiries(updated);
-                          }}
+                          onClick={() => markEnquirySeen(en.id)}
                           className="p-1.5 px-3 bg-emerald-50 text-emerald-600 border border-emerald-150 hover:bg-emerald-100 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors"
                         >
                           Mark as Seen
                         </button>
                       )}
                       <button
-                        onClick={() => {
-                          if (true) {
-                            setEnquiries(enquiries.filter((_, i) => i !== index));
-                          }
-                        }}
+                        onClick={() => deleteEnquiry(en.id)}
                         className="p-1.5 px-3 bg-rose-50 text-rose-500 border border-rose-150 hover:bg-rose-100 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors"
                       >
                         Delete
