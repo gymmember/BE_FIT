@@ -148,6 +148,72 @@
         }
       },
       "required": ["messageId", "sender", "text", "createdAt"]
+    },
+    "JoinRequest": {
+      "title": "JoinRequest",
+      "description": "Incoming student applications with measurements, location, gender, goals, and metric BMI calculations",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The authentication unique user ID"
+        },
+        "userName": {
+          "type": "string",
+          "description": "Full name of applicant"
+        },
+        "mobile": {
+          "type": "string",
+          "description": "Phone number"
+        },
+        "gmail": {
+          "type": "string",
+          "description": "Applicant email"
+        },
+        "age": {
+          "type": "string",
+          "description": "Applicant age text"
+        },
+        "gender": {
+          "type": "string",
+          "description": "Self-selected gender"
+        },
+        "address": {
+          "type": "string",
+          "description": "Residential home location address"
+        },
+        "fitnessGoal": {
+          "type": "string",
+          "description": "Selected body or mental objective"
+        },
+        "height": {
+          "type": "string",
+          "description": "Measuring height in centimeters"
+        },
+        "weight": {
+          "type": "string",
+          "description": "Measuring weight in kilograms"
+        },
+        "bmi": {
+          "type": "string",
+          "description": "Computed Body Mass Index"
+        },
+        "planName": {
+          "type": "string",
+          "description": "Target tier program name"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of reservation creation"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "contacted"],
+          "description": "Current resolution stage"
+        }
+      },
+      "required": ["userId", "userName", "mobile", "gmail", "age", "gender", "address", "fitnessGoal", "height", "weight", "bmi", "planName", "createdAt", "status"]
     }
   },
   "firestore": {
@@ -166,6 +232,10 @@
     "/user_profiles/{userId}/chats/{messageId}": {
       "schema": "ChatMessageLog",
       "description": "Secure personalized thread history log records for the client"
+    },
+    "/join_requests/{requestId}": {
+      "schema": "JoinRequest",
+      "description": "Submitted student registration and health enrollment forms"
     }
   }
 }

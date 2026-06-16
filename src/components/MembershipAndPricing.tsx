@@ -290,7 +290,7 @@ export default function MembershipAndPricing() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
           <div className="bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-2xl p-6 relative space-y-5">
             <h1 className="text-center font-bold text-lg tracking-wider text-amber-500 uppercase border-b border-zinc-800 pb-3 font-mono">
-              BROWN ABS - PASS RECEIPT
+              BE FIT - PASS RECEIPT
             </h1>
 
             {showInvoiceAlert ? (

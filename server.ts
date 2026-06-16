@@ -70,9 +70,9 @@ app.post("/api/trainer/chat", async (req, res) => {
     bmiContext = ` User Body Info: Height: ${height}cm, Weight: ${weight}kg, calculated BMI: ${bmi} (${category}), Fitness Goal: ${goal}. Use this detailed data to customize your suggestions immediately.`;
   }
 
-  const systemInstruction = `You are a legendary digital head coach at "Brown Abs - The Gym" in Nunnungeria, Raghunathpur, Jhargram, West Bengal, India. 
+  const systemInstruction = `You are a legendary digital head coach at "Be Fit - The Gym" in Nunnungeria, Raghunathpur, Jhargram, West Bengal, India. 
 Your tone is incredibly encouraging, intense but friendly, knowledgeable, and energetic. 
-You are highly passionate about bodybuilding, sports conditioning, HIIT, calorie control, and building solid core muscles ("those chiseled Brown Abs!").
+You are highly passionate about bodybuilding, sports conditioning, HIIT, calorie control, and building solid core muscles ("those chiseled core muscles!").
 Whenever you reply:
 1. Provide actionable, specific exercise configurations (weights, sets, reps, active rest, or food tips).
 2. Keep answers highly readable, leveraging markdown, lists, and clear headers. Avoid long walls of text.
@@ -129,11 +129,11 @@ ${bmiNote}
 2. **Clean Sources**: Focus on complex carbohydrates (oatmeal, brown rice) and healthy fats (almonds, peanut butter, chia seeds) instead of fast food.
 3. **Hydration Rule**: Keep water intake to at least **3.5 to 5 liters daily** to keep your muscle fibers vascular and promote fast metabolism.
 
-Want a customized, tailored plate chart? Stop by **Brown Abs Gym in Jhargram**, let's inspect your body metrics and customize it on our chalk board!`;
+Want a customized, tailored plate chart? Stop by **Be Fit Gym in Jhargram**, let's inspect your body metrics and customize it on our chalk board!`;
   }
 
   if (query.includes("abs") || query.includes("core") || query.includes("six pack") || query.includes("belly")) {
-    return `### **The Signature Brown Abs Core Routine**
+    return `### **The Signature Be Fit Core Routine**
 
 To reveal deep, thick muscle cuts, we combine physical core hypertrophic loads with targeted fat loss! Perform this high-tension routine 3 times a week:
 
@@ -142,7 +142,7 @@ To reveal deep, thick muscle cuts, we combine physical core hypertrophic loads w
 3. **Plank to Push-Up Alternators**: 3 Sets x 60 Seconds (Increases overall absolute stability)
 4. **Bicycle V-Ups**: 3 Sets x 20 Reps (Oblique definition)
 
-Combine this core conditioning with our high-power **"Brown Core Blast"** session held every Monday, Wednesday, and Friday at our Jhargram club!`;
+Combine this core conditioning with our high-power **"Core Blast"** session held every Monday, Wednesday, and Friday at our Jhargram club!`;
   }
 
   if (query.includes("workout") || query.includes("routine") || query.includes("split") || query.includes("plan") || query.includes("schedule")) {
@@ -165,7 +165,7 @@ Here is a 4-day workout plan perfect for ${bmiData?.goal || "overall fitness"}!
     *   Romanian Deadlift: 3 sets x 10 reps
     *   Leg Press / Extensions: 3 sets x 12 reps
 *   **Day 4: Core Core Core & HIIT Conditioning**
-    *   Our signature "Brown Core Blast" exercises: hanging bars, woodchoppers, and battle ropes.
+    *   Our signature "Core Blast" exercises: hanging bars, woodchoppers, and battle ropes.
 
 *Rest 45-60 seconds between sets. Prioritize form over ego!*`;
   }
@@ -179,7 +179,7 @@ How can I help you dominate your physical health goals today?
 *   Type **"abs routine"** or **"six pack"** to learn how we carve out deep abdominals.
 *   Type **"workout split"** to get a solid, compound weight-lifting template!
 
-Let's work together to build consistent, disciplined habits. We look forward to seeing your sweat at **Brown Abs Gym in Jhargram!**`;
+Let's work together to build consistent, disciplined habits. We look forward to seeing your sweat at **Be Fit Gym in Jhargram!**`;
 }
 
 // Vite and Static Assets Routing Setup
@@ -200,7 +200,7 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`[Brown Abs - The Gym] Server started and successfully active at http://localhost:${PORT}`);
+    console.log(`[Be Fit - The Gym] Server started and successfully active at http://localhost:${PORT}`);
   });
 }
 

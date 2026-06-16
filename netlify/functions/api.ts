@@ -44,9 +44,9 @@ router.post("/trainer/chat", async (req, res) => {
     bmiContext = ` User Body Info: Height: ${height}cm, Weight: ${weight}kg, calculated BMI: ${bmi} (${category}), Fitness Goal: ${goal}. Use this detailed data to customize your suggestions immediately.`;
   }
 
-  const systemInstruction = `You are a legendary digital head coach at "Brown Abs - The Gym" in Nunnungeria, Raghunathpur, Jhargram, West Bengal, India. 
+  const systemInstruction = `You are a legendary digital head coach at "Be Fit - The Gym" in Nunnungeria, Raghunathpur, Jhargram, West Bengal, India. 
 Your tone is incredibly encouraging, intense but friendly, knowledgeable, and energetic. 
-You are highly passionate about bodybuilding, sports conditioning, HIIT, calorie control, and building solid core muscles ("those chiseled Brown Abs!").
+You are highly passionate about bodybuilding, sports conditioning, HIIT, calorie control, and building solid core muscles ("those chiseled core muscles!").
 Whenever you reply:
 1. Provide actionable, specific exercise configurations (weights, sets, reps, active rest, or food tips).
 2. Keep answers highly readable, leveraging markdown, lists, and clear headers. Avoid long walls of text.
@@ -92,11 +92,11 @@ function generateLocalResponse(msg: string, bmiData: any): string {
   }
 
   if (query.includes("diet") || query.includes("eat") || query.includes("food") || query.includes("protein") || query.includes("calorie")) {
-    return `### **${bmiData?.goal === "Fat Loss" ? "Shredding Diet Guide" : "Beast Mode Bulking Diet Plan"}**\n\n${bmiNote}\n\n1. **Calculate Daily Protein intake**: Aim for **1.8g to 2.2g of protein per kg of bodyweight**. Consume high-quality sources such as chicken breasts, whole eggs, paneer, sprouts, fish, and whey.\n2. **Clean Sources**: Focus on complex carbohydrates (oatmeal, brown rice) and healthy fats (almonds, peanut butter, chia seeds).\n3. **Hydration Rule**: Keep water intake to at least **3.5 to 5 liters daily**.\n\nWant a customized, tailored plate chart? Stop by **Brown Abs Gym in Jhargram**!`;
+    return `### **${bmiData?.goal === "Fat Loss" ? "Shredding Diet Guide" : "Beast Mode Bulking Diet Plan"}**\n\n${bmiNote}\n\n1. **Calculate Daily Protein intake**: Aim for **1.8g to 2.2g of protein per kg of bodyweight**. Consume high-quality sources such as chicken breasts, whole eggs, paneer, sprouts, fish, and whey.\n2. **Clean Sources**: Focus on complex carbohydrates (oatmeal, brown rice) and healthy fats (almonds, peanut butter, chia seeds).\n3. **Hydration Rule**: Keep water intake to at least **3.5 to 5 liters daily**.\n\nWant a customized, tailored plate chart? Stop by **Be Fit Gym in Jhargram**!`;
   }
 
   if (query.includes("abs") || query.includes("core") || query.includes("six pack") || query.includes("belly")) {
-    return `### **The Signature Brown Abs Core Routine**\n\nTo reveal deep, thick muscle cuts, we combine physical core hypertrophic loads with targeted fat loss! Perform this high-tension routine 3 times a week:\n\n1. **Hanging Knee/Leg Raises**: 4 Sets x 15-20 Reps\n2. **Decline Weighted Crunches**: 4 Sets x 12-15 Reps\n3. **Plank to Push-Up Alternators**: 3 Sets x 60 Seconds\n4. **Bicycle V-Ups**: 3 Sets x 20 Reps\n\nCombine this core conditioning with our high-power **"Brown Core Blast"** session held every Monday, Wednesday, and Friday at our Jhargram club!`;
+    return `### **The Signature Be Fit Core Routine**\n\nTo reveal deep, thick muscle cuts, we combine physical core hypertrophic loads with targeted fat loss! Perform this high-tension routine 3 times a week:\n\n1. **Hanging Knee/Leg Raises**: 4 Sets x 15-20 Reps\n2. **Decline Weighted Crunches**: 4 Sets x 12-15 Reps\n3. **Plank to Push-Up Alternators**: 3 Sets x 60 Seconds\n4. **Bicycle V-Ups**: 3 Sets x 20 Reps\n\nCombine this core conditioning with our high-power **"Core Blast"** session held every Monday, Wednesday, and Friday at our Jhargram club!`;
   }
 
   if (query.includes("workout") || query.includes("routine") || query.includes("split") || query.includes("plan") || query.includes("schedule")) {

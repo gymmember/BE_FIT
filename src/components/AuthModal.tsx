@@ -126,7 +126,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <div className="flex items-center justify-center gap-2 mb-2">
             <Dumbbell className="text-amber-500" size={24} />
             <span className="font-mono text-xs uppercase tracking-widest text-amber-500 font-bold">
-              BROWN ABS SLG
+              BE FIT
             </span>
           </div>
           <h3 className="text-white text-xl md:text-2xl font-extrabold tracking-tight uppercase">
@@ -177,7 +177,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
               <input
                 type="email"
                 required
-                placeholder="e.g. info@brownabsgym.com"
+                placeholder="e.g. info@befitgym.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-zinc-950 border border-zinc-800 focus:border-amber-500 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-amber-500"
