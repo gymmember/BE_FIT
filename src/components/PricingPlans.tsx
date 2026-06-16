@@ -31,34 +31,26 @@ const HARDCODED_PLANS = [
 
 interface PricingPlansProps {
   onOpenAuth?: () => void;
+  onSelectPlan: (planName: string) => void;
 }
 
-export function PricingPlans({ onOpenAuth }: PricingPlansProps) {
+export function PricingPlans({ onOpenAuth, onSelectPlan }: PricingPlansProps) {
   const { plans, user } = useFirebase();
-  const [isJoinRequestModalOpen, setIsJoinRequestModalOpen] = useState(false);
-  const [selectedPlanName, setSelectedPlanName] = useState("");
 
   const displayPlans = plans.length > 0 ? plans : HARDCODED_PLANS;
 
   const handleSelectPlan = (planName: string) => {
     if (!user) {
-      alert("Please login to select a plan!");
       if (onOpenAuth) {
         onOpenAuth();
       }
     } else {
-      setSelectedPlanName(planName);
-      setIsJoinRequestModalOpen(true);
+      onSelectPlan(planName);
     }
   };
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 py-16 sm:py-24 relative z-10" id="pricing-plans-section">
-      <JoinRequestModal 
-        isOpen={isJoinRequestModalOpen} 
-        onClose={() => setIsJoinRequestModalOpen(false)} 
-        planName={selectedPlanName} 
-      />
       <div className="text-center mb-16 space-y-4">
         <h2 className="text-3xl sm:text-5xl font-black uppercase tracking-tight text-white drop-shadow-lg">
           Our Pass Plans

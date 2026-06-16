@@ -195,6 +195,12 @@ interface FirebaseContextType {
     mobile: string,
     gmail: string,
     age: string,
+    gender: string,
+    address: string,
+    fitnessGoal: string,
+    height: string,
+    weight: string,
+    bmi: string,
     planName: string
   ) => Promise<void>;
   deletePass: (passId: string) => Promise<void>;
@@ -859,6 +865,12 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
     mobile: string,
     gmail: string,
     age: string,
+    gender: string,
+    address: string,
+    fitnessGoal: string,
+    height: string,
+    weight: string,
+    bmi: string,
     planName: string
   ) => {
     if (!user) throw new Error("Must be logged in.");
@@ -871,6 +883,12 @@ export function FirebaseProvider({ children }: { children: ReactNode }) {
         mobile,
         gmail,
         age,
+        gender,
+        address,
+        fitnessGoal,
+        height,
+        weight,
+        bmi,
         planName,
         createdAt: new Date(),
         status: "pending"

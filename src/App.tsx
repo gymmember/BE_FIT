@@ -16,6 +16,7 @@ import { CalorieCalculator } from "./components/CalorieCalculator";
 import { ContactSection } from "./components/ContactSection";
 import { useFirebase } from "./context/FirebaseContext";
 import { Opening3DEffect } from "./components/Opening3DEffect";
+import JoinRequestModal from "./components/JoinRequestModal";
 import { 
   Dumbbell, 
   Sparkles, 
@@ -42,6 +43,8 @@ export default function App() {
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
+  const [isJoinRequestModalOpen, setIsJoinRequestModalOpen] = useState<boolean>(false);
+  const [selectedPlanForJoin, setSelectedPlanForJoin] = useState<string>("");
   
   // State for physical status validation
   const [isLinkingFormOpen, setIsLinkingFormOpen] = useState<boolean>(false);
@@ -201,7 +204,13 @@ export default function App() {
                 <WelcomeSection />
 
                 {/* Pricing Plans Section */}
-                <PricingPlans onOpenAuth={() => setIsAuthModalOpen(true)} />
+                <PricingPlans 
+                  onOpenAuth={() => setIsAuthModalOpen(true)} 
+                  onSelectPlan={(planName) => {
+                    setSelectedPlanForJoin(planName);
+                    setIsJoinRequestModalOpen(true);
+                  }}
+                />
 
                 {/* Gallery Section */}
                 <GallerySection />
@@ -644,7 +653,13 @@ export default function App() {
                     </div>
 
                     <div className="flex-1 flex flex-col items-center justify-center pb-16 pt-8">
-                      <PricingPlans onOpenAuth={() => setIsAuthModalOpen(true)} />
+                      <PricingPlans 
+                        onOpenAuth={() => setIsAuthModalOpen(true)} 
+                        onSelectPlan={(name) => {
+                          setSelectedPlanForJoin(name);
+                          setIsJoinRequestModalOpen(true);
+                        }}
+                      />
                       <GallerySection />
                       <AchievementsSection />
                       <CalorieCalculator />
@@ -664,6 +679,12 @@ export default function App() {
       <AuthModal 
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
+      />
+
+      <JoinRequestModal 
+        isOpen={isJoinRequestModalOpen} 
+        onClose={() => setIsJoinRequestModalOpen(false)} 
+        planName={selectedPlanForJoin} 
       />
 
       {/* Gym Brand Coordinates Footer */}

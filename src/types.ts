@@ -5,6 +5,12 @@ export interface JoinRequest {
   mobile: string;
   gmail: string;
   age: string;
+  gender: string;
+  address: string;
+  fitnessGoal: string;
+  height: string;
+  weight: string;
+  bmi: string;
   planName: string;
   createdAt: any;
   status: "pending" | "contacted";

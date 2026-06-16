@@ -2580,6 +2580,115 @@ export default function AdminPanel() {
           </div>
         )}
 
+        {/* TAB 8b: JOIN REQUESTS BOARD */}
+        {activeTab === "join" && (
+          <div className="bg-white border border-slate-150 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm animate-fade-in" id="join-requests-tab-panel">
+            <div className="pb-5 border-b border-slate-100 flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-black text-slate-900 flex items-center gap-2 uppercase tracking-tight">
+                  <UserPlus className="text-amber-500 w-5 h-5" />
+                  New Student Join Requests
+                </h3>
+                <p className="text-slate-400 text-xs mt-1">
+                  Applications from the website for new gym memberships with health metrics.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              {joinRequests.map((jr) => (
+                <div key={jr.id} className="p-6 bg-slate-50 border border-slate-200 rounded-[2rem] flex flex-col md:flex-row justify-between gap-6 shadow-sm hover:border-amber-200 transition-all">
+                  <div className="flex-1 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-500 flex items-center justify-center text-zinc-950 font-black text-xl italic uppercase">
+                        {jr.userName.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="font-black text-slate-900 text-lg uppercase tracking-tight">{jr.userName}</div>
+                        <div className="text-[10px] font-bold text-amber-600 uppercase tracking-widest">{jr.planName} Plan Applicant</div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="bg-white p-3 rounded-2xl border border-slate-100">
+                        <div className="text-[9px] uppercase font-bold text-slate-400 mb-1">Mobile</div>
+                        <div className="text-xs font-black text-slate-800">{jr.mobile}</div>
+                      </div>
+                      <div className="bg-white p-3 rounded-2xl border border-slate-100">
+                        <div className="text-[9px] uppercase font-bold text-slate-400 mb-1">Gmail</div>
+                        <div className="text-xs font-black text-slate-800 truncate" title={jr.gmail}>{jr.gmail}</div>
+                      </div>
+                      <div className="bg-white p-3 rounded-2xl border border-slate-100">
+                        <div className="text-[9px] uppercase font-bold text-slate-400 mb-1">Age / Gender</div>
+                        <div className="text-xs font-black text-slate-800">{jr.age}Y • {jr.gender}</div>
+                      </div>
+                      <div className="bg-white p-3 rounded-2xl border border-slate-100">
+                        <div className="text-[9px] uppercase font-bold text-slate-400 mb-1">Fitness Goal</div>
+                        <div className="text-xs font-black text-pink-600 uppercase italic">{jr.fitnessGoal}</div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="bg-amber-50 p-3 rounded-2xl border border-amber-100">
+                        <div className="text-[9px] uppercase font-bold text-amber-600 mb-1">Height</div>
+                        <div className="text-xs font-black text-zinc-900">{jr.height} cm</div>
+                      </div>
+                      <div className="bg-amber-50 p-3 rounded-2xl border border-amber-100">
+                        <div className="text-[9px] uppercase font-bold text-amber-600 mb-1">Weight</div>
+                        <div className="text-xs font-black text-zinc-900">{jr.weight} kg</div>
+                      </div>
+                      <div className="bg-zinc-900 p-3 rounded-2xl border border-zinc-800 shadow-lg shadow-amber-500/10">
+                        <div className="text-[9px] uppercase font-bold text-zinc-500 mb-1">Calculated BMI</div>
+                        <div className="text-sm font-black text-amber-500">{jr.bmi}</div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-2xl border border-slate-100">
+                      <div className="text-[9px] uppercase font-bold text-slate-400 mb-1 italic">Residential Address</div>
+                      <p className="text-xs text-slate-600 font-medium leading-relaxed">{jr.address}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col justify-between items-end gap-4 min-w-[150px]">
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] font-mono text-slate-400">Received on:</span>
+                      <span className="text-xs font-bold text-slate-600">
+                        {jr.createdAt?.seconds 
+                          ? new Date(jr.createdAt.seconds * 1000).toLocaleDateString() 
+                          : "Today"}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col gap-2 w-full">
+                      <a 
+                        href={`tel:${jr.mobile}`}
+                        className="w-full text-center py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-500/20"
+                      >
+                        Call Now
+                      </a>
+                      <button 
+                        className="w-full py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
+                        onClick={async () => {
+                          // Update status function needed in context if we want "Mark as Contacted"
+                          alert("Feature to mark as contacted coming soon!");
+                        }}
+                      >
+                        Pending
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {joinRequests.length === 0 && (
+                <div className="p-12 text-center border-2 border-dashed border-slate-150 rounded-2xl bg-slate-50/50">
+                  <p className="text-slate-400 font-mono text-xs">No active join requests logged right now.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* TAB 9: WORKOUT PLANS BUILDER */}
         {activeTab === "workout" && (
           <div className="bg-white border border-slate-150 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm animate-fade-in" id="workout-tab-panel">
